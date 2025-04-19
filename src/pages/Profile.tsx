@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { BookOpen, Award, Flame, User as UserIcon } from 'lucide-react';
 import { useWords } from '../hooks/useWords';
 
+
 function Profile() {
   const { user } = useAuth();
   const { userWords } = useWords();
