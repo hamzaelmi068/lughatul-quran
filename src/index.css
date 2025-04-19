@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@700&display=swap');
+
 
 /* Global dark mode background and text color */
 body {

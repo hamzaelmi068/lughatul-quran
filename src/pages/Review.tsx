@@ -1,165 +1,124 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Repeat, CheckCircle, Flame } from 'lucide-react';
-import { useWords } from '../hooks/useWords';
-import Flashcard from '../components/Flashcard';
-import { calculateNextReview } from "../lib/spaced-repetition"; // ✅ CORRECT spellingimport type { Database } from '../lib/database.types';
+import { Clock, CheckCircle, Flame } from 'lucide-react';
+import { useWords } from '@/hooks/useWords';
+import Flashcard from '@/components/Flashcard';
+import { calculateNextReview } from '@/lib/spaced-repitition';
+import type { Database } from '@/lib/database.types';
 
-type Word = Database['public']['Tables']['words']['Row'];
-type UserWord = Database['public']['Tables']['user_words']['Row'];
-
-function Review() {
-  const { words, userWords, loading, updateWordProgress } = useWords();
-  const [selectedTab, setSelectedTab] = useState<'due' | 'all' | 'mastered'>('due');
+const Review = () => {
+  const [selectedTab, setSelectedTab] = useState<'due' | 'mastered'>('due');
   const [currentWord, setCurrentWord] = useState<Word | null>(null);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [streak, setStreak] = useState(0);
 
-  const tabs = [
-    { id: 'due', label: 'Due Today', icon: Clock },
-    { id: 'all', label: 'All Words', icon: Repeat },
-    { id: 'mastered', label: 'Mastered', icon: CheckCircle },
-  ];
+  const {
+    words,
+    userWords,
+    loading,
+    updateWordProgress
+  } = useWords();
 
-  // Determine which word to review next when tab or data changes
+  type Word = Database['public']['Tables']['words']['Row'];
+  type UserWord = Database['public']['Tables']['user_words']['Row'];
+
+  const now = new Date();
+  const dueWords = userWords.filter((w) => w.next_review && new Date(w.next_review) <= now);
+  const masteredWords = userWords.filter((w) => w.status === 'mastered');
+
+  const reviewed = selectedTab === 'due' ? dueWords : masteredWords;
+  const wordData = reviewed
+    .map((uw) => {
+      const match = words.find((w) => w.id === uw.word_id);
+      return match ? { ...match, ...uw } : null;
+    })
+    .filter(Boolean) as (Word & UserWord)[];
+
   useEffect(() => {
-    if (selectedTab === 'due') {
-      // Find the earliest due word (next_review <= today)
-      const today = new Date();
-      const dueUserWord = userWords
-        .filter(uw => {
-          const nextReview = uw.next_review ? new Date(uw.next_review) : null;
-          return uw.status === 'learning' && nextReview && nextReview <= today;
-        })
-        .sort((a, b) => new Date(a.next_review || 0).getTime() - new Date(b.next_review || 0).getTime())[0];
-      if (dueUserWord) {
-        const wordObj = words.find(w => w.id === dueUserWord.word_id) || null;
-        setCurrentWord(wordObj);
-      } else {
-        setCurrentWord(null);
-      }
-    } else {
-      setCurrentWord(null);
-    }
+    setCurrentWord(wordData[0] || null);
   }, [selectedTab, words, userWords]);
 
-  const handleResult = async (quality: 0 | 1 | 2 | 3 | 4 | 5) => {
-    if (!currentWord) return;
-    // Only proceed if currentWord has an entry in userWords (it should in 'due')
-    const userWord = userWords.find(uw => uw.word_id === currentWord.id);
-    if (!userWord) return;
-    // Calculate new interval and ease factor
-    const result = calculateNextReview(quality, userWord.interval, userWord.ease_factor);
-    const nextReviewDate = new Date();
-    nextReviewDate.setDate(new Date().getDate() + result.interval);
-    // Determine status: if quality is max (5) and interval is long enough, maybe mark mastered
-    const newStatus = result.interval >= 30 ? 'mastered' : 'learning';
-    await updateWordProgress(currentWord.id, newStatus, {
-      easeFactor: result.easeFactor,
-      interval: result.interval,
-      nextReview: nextReviewDate.toISOString(),
+  const handleReview = async (word: Word & UserWord, quality: 0 | 1 | 2 | 3 | 4 | 5) => {
+    const { easeFactor, interval } = calculateNextReview(
+      quality,
+      word.interval ?? 1,
+      word.ease_factor ?? 2.5
+    );
+
+    const nextReview = new Date(Date.now() + interval * 86400000);
+    const status = quality >= 4 ? 'mastered' : 'learning';
+
+    await updateWordProgress(word.word_id, {
+      ease_factor: easeFactor,
+      interval,
+      status,
+      next_review: nextReview
     });
-    // After updating, refresh the due list by removing this word from current view
+
     setCurrentWord(null);
+    setReviewCount((count) => count + 1);
+    setStreak((s) => (quality >= 3 ? s + 1 : 0));
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-600"></div>
-      </div>
-    );
-  }
+  const tabs = [
+    { id: 'due', label: '📅 Review Due', icon: Clock },
+    { id: 'mastered', label: '✅ Mastered Words', icon: CheckCircle }
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Review Words</h1>
-      
-      {/* Tab selectors */}
-      <div className="mb-6">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          const selected = selectedTab === tab.id;
-          return (
-            <button 
-              key={tab.id} 
-              onClick={() => setSelectedTab(tab.id as typeof selectedTab)}
-              className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg mr-2 mb-2 transition duration-300 ${
-                selected 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700'
-              }`}
+    <div className="min-h-screen py-10 px-4 md:px-8 text-white bg-gradient-to-br from-gray-900 to-black">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-center mb-6 text-green-300 drop-shadow-lg">
+          🧠 Review Your Quranic Vocabulary
+        </h1>
+
+        <div className="flex justify-center gap-4 flex-wrap mb-8">
+          {tabs.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setSelectedTab(id as any)}
+              className={`px-5 py-3 rounded-full border flex items-center gap-2 shadow-md transition-all duration-200 text-sm font-semibold backdrop-blur-md
+                ${
+                  selectedTab === id
+                    ? 'bg-green-500/10 border-green-400 text-green-300'
+                    : 'bg-gray-800/50 border-gray-600 hover:border-green-400 hover:text-green-300'
+                }`}
             >
-              <Icon className="h-5 w-5" />
-              <span>{tab.label}</span>
+              <Icon className="w-5 h-5" />
+              {label}
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
 
-      {/* Due Today tab content */}
-      {selectedTab === 'due' && (
-        <div>
-          {currentWord ? (
-            <>
-              <Flashcard word={currentWord} onResult={handleResult} />
-              <p className="mt-4 text-center text-gray-600 dark:text-gray-400">
-                Rate your recall by flipping the card.
-              </p>
-            </>
+        <div className="max-w-xl mx-auto text-center mb-6">
+          <div className="text-sm text-gray-400 mb-2">
+            🔁 Reviews this session: <strong>{reviewCount}</strong>
+          </div>
+          <div className="text-sm text-orange-400">
+            <Flame className="inline-block w-4 h-4 mr-1" /> Streak: <strong>{streak}</strong>
+          </div>
+        </div>
+
+        <div className="max-w-xl mx-auto">
+          {loading ? (
+            <p className="text-center text-gray-300 animate-pulse">Loading your progress...</p>
+          ) : currentWord ? (
+            <Flashcard
+              word={currentWord}
+              onReview={(quality) => handleReview(currentWord, quality)}
+            />
           ) : (
-            <p className="text-xl text-gray-800 dark:text-gray-200">
-              {userWords.some(uw => uw.status === 'learning') 
-                ? "No words due for review right now. Great job!" 
-                : "You haven't started learning any words yet."}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* All Words tab content */}
-      {selectedTab === 'all' && (
-        <div className="space-y-4">
-          {words.map(word => (
-            <div 
-              key={word.id} 
-              className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-            >
-              <p className="text-xl font-arabic text-gray-900 dark:text-gray-100 mb-2">
-                {word.arabic}
-              </p>
-              <p className="text-gray-800 dark:text-gray-200">
-                {word.english}
-              </p>
+            <div className="text-center text-green-400 text-lg font-medium">
+              {selectedTab === 'due'
+                ? '✅ No words are due for review right now!'
+                : '🌟 You have mastered all reviewed words!'}
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Mastered tab content */}
-      {selectedTab === 'mastered' && (
-        <div className="space-y-4">
-          {words
-            .filter(word => userWords.find(uw => uw.word_id === word.id && uw.status === 'mastered'))
-            .map(word => (
-              <div 
-                key={word.id} 
-                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-              >
-                <p className="text-xl font-arabic text-gray-900 dark:text-gray-100 mb-2">
-                  {word.arabic}
-                </p>
-                <p className="text-gray-800 dark:text-gray-200">
-                  {word.english}
-                </p>
-              </div>
-          ))}
-          {userWords.every(uw => uw.status !== 'mastered') && (
-            <p className="text-gray-700 dark:text-gray-300">
-              You haven’t mastered any words yet. Keep reviewing to master words!
-            </p>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
-}
+};
 
 export default Review;
+
+
