@@ -49,5 +49,14 @@ function App() {
     </AuthProvider>
   );
 }
-
+function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <>
+      <Navbar />
+      <div className="pt-16"> {/* add top padding so content doesn't hide behind navbar */}
+        <Component {...pageProps} />
+      </div>
+    </>
+  );
+}
 export default App;

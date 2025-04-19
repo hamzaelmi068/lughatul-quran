@@ -65,9 +65,9 @@ const Review = () => {
   ];
 
   return (
-    <div className="min-h-screen py-10 px-4 md:px-8 text-white bg-gradient-to-br from-gray-900 to-black">
+    <div className="min-h-screen py-10 px-4 md:px-8 bg-white text-gray-900 dark:text-white dark:bg-gradient-to-br dark:from-gray-900 dark:to-black transition-colors duration-500">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-extrabold text-center mb-6 text-green-300 drop-shadow-lg">
+        <h1 className="text-4xl font-extrabold text-center mb-6 text-green-700 dark:text-green-300 drop-shadow-lg">
           🧠 Review Your Quranic Vocabulary
         </h1>
 
@@ -78,10 +78,10 @@ const Review = () => {
               onClick={() => setSelectedTab(id as any)}
               className={`px-5 py-3 rounded-full border flex items-center gap-2 shadow-md transition-all duration-200 text-sm font-semibold backdrop-blur-md
                 ${
-                  selectedTab === id
-                    ? 'bg-green-500/10 border-green-400 text-green-300'
-                    : 'bg-gray-800/50 border-gray-600 hover:border-green-400 hover:text-green-300'
-                }`}
+                selectedTab === id
+                  ? 'bg-green-100 dark:bg-green-500/10 border-green-500 text-green-700 dark:text-green-300'
+                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-green-500 hover:text-green-600 dark:hover:text-green-300'
+              }`}
             >
               <Icon className="w-5 h-5" />
               {label}
@@ -90,24 +90,26 @@ const Review = () => {
         </div>
 
         <div className="max-w-xl mx-auto text-center mb-6">
-          <div className="text-sm text-gray-400 mb-2">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
             🔁 Reviews this session: <strong>{reviewCount}</strong>
           </div>
-          <div className="text-sm text-orange-400">
+          <div className="text-sm text-orange-600 dark:text-orange-400">
             <Flame className="inline-block w-4 h-4 mr-1" /> Streak: <strong>{streak}</strong>
           </div>
         </div>
 
         <div className="max-w-xl mx-auto">
           {loading ? (
-            <p className="text-center text-gray-300 animate-pulse">Loading your progress...</p>
+            <p className="text-center text-gray-500 dark:text-gray-300 animate-pulse">Loading your progress...</p>
           ) : currentWord ? (
-            <Flashcard
-              word={currentWord}
-              onReview={(quality) => handleReview(currentWord, quality)}
-            />
+            <div className="animate-fade-in">
+              <Flashcard
+                word={currentWord}
+                onReview={(quality) => handleReview(currentWord, quality)}
+              />
+            </div>
           ) : (
-            <div className="text-center text-green-400 text-lg font-medium">
+            <div className="text-center text-green-700 dark:text-green-400 text-lg font-medium">
               {selectedTab === 'due'
                 ? '✅ No words are due for review right now!'
                 : '🌟 You have mastered all reviewed words!'}
@@ -120,6 +122,3 @@ const Review = () => {
 };
 
 export default Review;
-
-
-
