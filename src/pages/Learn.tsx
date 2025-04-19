@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useWords } from '@/hooks/useWords';
+import { useWords } from '../hooks/useWords';
 import Flashcard from '@/components/Flashcard';
 import { Book, Sparkles, GraduationCap } from 'lucide-react';
 import type { Database } from '@/lib/database.types';
