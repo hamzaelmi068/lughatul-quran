@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Repeat, CheckCircle, Flame } from 'lucide-react';
 import { useWords } from '../hooks/useWords';
 import Flashcard from '../components/Flashcard';
-import { calculateNextReview } from '../lib/spaced-repetition';
-import type { Database } from '../lib/database.types';
+import { calculateNextReview } from "../lib/spaced-repetition"; // ✅ CORRECT spellingimport type { Database } from '../lib/database.types';
 
 type Word = Database['public']['Tables']['words']['Row'];
 type UserWord = Database['public']['Tables']['user_words']['Row'];
