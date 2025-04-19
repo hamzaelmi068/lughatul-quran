@@ -1,14 +1,14 @@
 import React from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
-  const router = useRouter();
+  const location = useLocation();
+
   const links = [
-    { href: '/', label: 'Home' },
-    { href: '/learn', label: 'Learn' },
-    { href: '/review', label: 'Review' },
-    { href: '/profile', label: 'Profile' }
+    { to: '/', label: 'Home' },
+    { to: '/learn', label: 'Learn' },
+    { to: '/review', label: 'Review' },
+    { to: '/profile', label: 'Profile' }
   ];
 
   return (
@@ -16,17 +16,17 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <h1 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">LughatulQuran</h1>
         <div className="flex gap-4 text-sm font-medium">
-          {links.map(({ href, label }) => (
-            <Link key={href} href={href} legacyBehavior>
-              <a
-                className={`px-3 py-2 rounded-md transition hover:text-emerald-600 dark:hover:text-emerald-400 ${
-                  router.pathname === href
-                    ? 'text-emerald-700 dark:text-emerald-300'
-                    : 'text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                {label}
-              </a>
+          {links.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`px-3 py-2 rounded-md transition hover:text-emerald-600 dark:hover:text-emerald-400 ${
+                location.pathname === to
+                  ? 'text-emerald-700 dark:text-emerald-300'
+                  : 'text-gray-700 dark:text-gray-300'
+              }`}
+            >
+              {label}
             </Link>
           ))}
         </div>
@@ -36,4 +36,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
