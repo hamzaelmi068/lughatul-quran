@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, Flame } from 'lucide-react';
 import { useWords } from '@/hooks/useWords';
 import Flashcard from '@/components/Flashcard';
-import { calculateNextReview } from '@/lib/spaced-repitition';
+import { calculateNextReview } from '@/lib/spaced-repetition';
 import type { Database } from '@/lib/database.types';
 
 const Review = () => {
