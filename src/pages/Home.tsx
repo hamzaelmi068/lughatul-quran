@@ -1,60 +1,49 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Book, Lightbulb, Search } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-function Home() {
+export default function Home() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  const handleGetStarted = () => {
-    if (user) {
-      navigate('/learn');
-    } else {
-      navigate('/auth');
-    }
-  };
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-900">
-      {/* Hero Section */}
-      <div 
-        className="relative py-24 bg-cover bg-center text-white text-center" 
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1617196009934-955f9844980e?auto=format&fit=crop&w=2560&q=80')" }}
+    <main className="min-h-screen bg-background text-white flex flex-col items-center px-4 py-10">
+      <h1 className="text-5xl md:text-6xl font-bold text-center font-arabic">
+        لُغَةُ القُرآن
+      </h1>
+      <p className="text-center text-muted-foreground text-lg mt-3">
+        Learn Quranic Arabic through spaced repetition
+      </p>
+      <button
+        onClick={() => navigate('/learn')}
+        className="mt-6 px-8 py-3 bg-primary hover:bg-primary/80 text-white rounded-lg text-lg font-medium shadow transition"
       >
-        <div className="absolute inset-0 bg-gray-900 opacity-60"></div>
-        <div className="relative container mx-auto px-4">
-          <h1 className="text-5xl font-bold mb-6 font-arabic">لُغَةُ الْقُرْآنِ</h1>
-          <p className="text-xl mb-8">Learn Quranic Arabic through spaced repetition</p>
-          <button 
-            onClick={handleGetStarted}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg text-lg shadow-lg"
-          >
-            {user ? 'Continue Learning' : 'Get Started'}
-          </button>
-        </div>
-      </div>
+        Get Started
+      </button>
 
-      {/* Features Section */}
-      <div className="max-w-6xl mx-auto px-4 py-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-gray-800 dark:text-gray-200">
-        <div className="flex flex-col items-center text-center">
-          <Book className="h-12 w-12 text-emerald-600 mb-4" />
-          <h3 className="text-2xl font-semibold mb-2">Comprehensive Vocabulary</h3>
-          <p>Study essential Quranic words with meanings and context.</p>
-        </div>
-        <div className="flex flex-col items-center text-center">
-          <Lightbulb className="h-12 w-12 text-emerald-600 mb-4" />
-          <h3 className="text-2xl font-semibold mb-2">Spaced Repetition</h3>
-          <p>Proven technique to enhance retention and recall over time.</p>
-        </div>
-        <div className="flex flex-col items-center text-center">
-          <Search className="h-12 w-12 text-emerald-600 mb-4" />
-          <h3 className="text-2xl font-semibold mb-2">Track Your Progress</h3>
-          <p>Review learned words and monitor your journey to mastery.</p>
-        </div>
+      <div className="grid md:grid-cols-3 gap-8 mt-20 max-w-5xl w-full text-center">
+        {[
+          {
+            icon: <Book className="mx-auto w-8 h-8 mb-2" />,
+            title: 'Comprehensive Vocabulary',
+            desc: 'Study essential Quranic words with meanings and context.',
+          },
+          {
+            icon: <Lightbulb className="mx-auto w-8 h-8 mb-2" />,
+            title: 'Spaced Repetition',
+            desc: 'Proven technique to enhance retention and recall over time.',
+          },
+          {
+            icon: <Search className="mx-auto w-8 h-8 mb-2" />,
+            title: 'Track Your Progress',
+            desc: 'Review learned words and monitor your journey to mastery.',
+          },
+        ].map((item, idx) => (
+          <div key={idx} className="p-4 bg-card rounded-xl shadow hover:scale-105 transition">
+            {item.icon}
+            <h3 className="text-lg font-semibold mb-1">{item.title}</h3>
+            <p className="text-sm text-muted-foreground">{item.desc}</p>
+          </div>
+        ))}
       </div>
-    </div>
+    </main>
   );
 }
-
-export default Home;
