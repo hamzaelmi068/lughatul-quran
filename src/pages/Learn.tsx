@@ -65,7 +65,7 @@ export default function Learn() {
     (w) => w.level === activeTab && !isLearned(w.id)
   );
 
-  
+
 return (
   <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black dark:text-white transition-colors duration-500">
     <motion.h1
@@ -125,5 +125,8 @@ return (
         ))}
       </div>
     )}
-  </div>
-);
+      </div>
+  );
+}
+
+export default Learn;
