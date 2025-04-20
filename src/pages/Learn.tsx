@@ -19,7 +19,7 @@ interface UserWord {
 const tabs = ['beginner', 'intermediate', 'advanced'];
 
 export default function Learn() {
-  const { user } = useAuth(); // ✅ FIX: use inside component
+  const { user } = useAuth();
   const [words, setWords] = useState<Word[]>([]);
   const [userWords, setUserWords] = useState<UserWord[]>([]);
   const [activeTab, setActiveTab] = useState('beginner');
@@ -66,7 +66,7 @@ export default function Learn() {
   );
 
   return (
-    <div className="min-h-screen px-6 py-12 bg-[#fdfaf3] text-gray-900 dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black dark:text-white transition-colors duration-500">
+    <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black dark:text-white transition-colors duration-500">
       <motion.h1
         className="text-3xl md:text-4xl font-bold text-center text-emerald-700 dark:text-emerald-300 mb-6"
         initial={{ opacity: 0, y: -10 }}
