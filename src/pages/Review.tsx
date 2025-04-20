@@ -65,9 +65,9 @@ const Review = () => {
   ];
 
   return (
-    <div className="min-h-screen py-10 px-4 md:px-8 bg-white text-gray-900 dark:text-white dark:bg-gradient-to-br dark:from-gray-900 dark:to-black transition-colors duration-500">
+    <div className="min-h-screen pt-20 px-4 pb-12 md:px-8 bg-[#fdfaf3] text-gray-900 dark:text-white dark:bg-gradient-to-br dark:from-gray-900 dark:to-black transition-colors duration-500">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-extrabold text-center mb-6 text-green-700 dark:text-green-300 drop-shadow-lg">
+        <h1 className="text-4xl font-extrabold text-center mb-6 text-emerald-700 dark:text-emerald-300 drop-shadow-lg">
           🧠 Review Your Quranic Vocabulary
         </h1>
 
@@ -109,7 +109,7 @@ const Review = () => {
               />
             </div>
           ) : (
-            <div className="text-center text-green-700 dark:text-green-400 text-lg font-medium">
+            <div className="text-center text-emerald-700 dark:text-emerald-400 text-lg font-medium">
               {selectedTab === 'due'
                 ? '✅ No words are due for review right now!'
                 : '🌟 You have mastered all reviewed words!'}
