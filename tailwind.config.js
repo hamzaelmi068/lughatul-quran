@@ -1,13 +1,22 @@
 /** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  darkMode: 'class',
   theme: {
     extend: {
-      fontFamily: {
-        arabic: ['Scheherazade New', 'serif'],
+      colors: {
+        sand: '#fdfaf3',
+        emerald: {
+          600: '#059669',
+          700: '#047857'
+        },
+        gold: {
+          400: '#facc15',
+          500: '#eab308'
+        }
       },
-    },
-  },
-  plugins: [],
+      fontFamily: {
+        arabic: ['Scheherazade New', 'serif']
+      }
+    }
+  }
 };
