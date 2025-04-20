@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-const { user } = useAuth();
 import { supabase } from '../lib/supabaseClient';
 import { motion } from 'framer-motion';
-import clsx from 'clsx';
 
 interface Word {
   id: string;
@@ -21,7 +19,7 @@ interface UserWord {
 const tabs = ['beginner', 'intermediate', 'advanced'];
 
 export default function Learn() {
-  const user = useUser();
+  const { user } = useAuth(); // ✅ FIX: use inside component
   const [words, setWords] = useState<Word[]>([]);
   const [userWords, setUserWords] = useState<UserWord[]>([]);
   const [activeTab, setActiveTab] = useState('beginner');
@@ -82,12 +80,11 @@ export default function Learn() {
           <button
             key={level}
             onClick={() => setActiveTab(level)}
-            className={clsx(
-              'px-4 py-2 rounded-full border text-sm font-medium transition-all',
+            className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
               activeTab === level
                 ? 'bg-emerald-600 text-white shadow-md'
                 : 'bg-white dark:bg-white/10 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300'
-            )}
+            }`}
           >
             {level.charAt(0).toUpperCase() + level.slice(1)}
           </button>
