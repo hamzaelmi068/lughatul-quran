@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
-// tailwind.config.js
 export default {
+  content: [
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx}'
+  ],
   theme: {
     extend: {
       colors: {
@@ -18,5 +21,6 @@ export default {
         arabic: ['Scheherazade New', 'serif']
       }
     }
-  }
+  },
+  plugins: []
 };
