@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useAuth } from '../contexts/AuthContext';
+const { user } = useAuth();
 import { supabase } from '../lib/supabaseClient';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
