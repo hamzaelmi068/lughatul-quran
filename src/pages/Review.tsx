@@ -11,7 +11,7 @@ const Review = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [streak, setStreak] = useState(0);
 
-  const { words, userWords, updateWordProgress, loading } = useWords();
+const { words, userWords, updateWordProgress, loading, refetch } = useWords(); // ✅ added refetch
 
   const now = new Date();
 
@@ -25,28 +25,30 @@ const Review = () => {
 
   const current = reviewQueue[currentIndex];
 
-  const handleReview = async (quality: 0 | 1 | 2 | 3) => {
-    if (!current) return;
+  const handleReview = async (word: Word & UserWord, quality: 0 | 1 | 2 | 3) => {
+  const { easeFactor, interval } = calculateNextReview(
+    quality,
+    word.interval ?? 1,
+    word.ease_factor ?? 2.5
+  );
 
-    const { easeFactor, interval } = calculateNextReview(
-      quality,
-      current.interval ?? 1,
-      current.ease_factor ?? 2.5
-    );
+  const nextReview = new Date(Date.now() + interval * 86400000);
+  const status = quality >= 3 ? 'mastered' : 'learning';
 
-    const nextReview = new Date(Date.now() + interval * 86400000);
-    const status = quality >= 3 ? 'mastered' : 'learning';
+  await updateWordProgress(word.word_id, {
+    ease_factor: easeFactor,
+    interval,
+    status,
+    next_review: nextReview
+  });
 
-    await updateWordProgress(current.word_id, {
-      ease_factor: easeFactor,
-      interval,
-      next_review: nextReview,
-      status
-    });
+  // ✅ ADD THIS
+  await refetch(); // re-fetch userWords to exclude the reviewed word
 
-    setStreak(q => (quality >= 2 ? q + 1 : 0));
-    setCurrentIndex(i => i + 1);
-  };
+  setStreak(q => (quality >= 2 ? q + 1 : 0));
+  setCurrentIndex(0); // Reset index to get next up-to-date word
+};
+
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
