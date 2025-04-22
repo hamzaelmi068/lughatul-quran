@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { motion } from 'framer-motion';
-import toast, { Toaster } from 'react-hot-toast';
 
 interface Word {
   id: string;
@@ -25,7 +24,6 @@ export default function Learn() {
   const [userWords, setUserWords] = useState<UserWord[]>([]);
   const [activeTab, setActiveTab] = useState('beginner');
   const [loading, setLoading] = useState(true);
-  const [loadingWordId, setLoadingWordId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) fetchData();
@@ -33,11 +31,13 @@ export default function Learn() {
 
   const fetchData = async () => {
     setLoading(true);
+
     const { data: wordList } = await supabase.from('words').select('*');
     const { data: userData } = await supabase
       .from('user_words')
       .select('word_id')
       .eq('user_id', user?.id);
+
     setWords(wordList || []);
     setUserWords(userData || []);
     setLoading(false);
@@ -45,21 +45,17 @@ export default function Learn() {
 
   const handleLearn = async (wordId: string) => {
     if (!user) return;
-    try {
-      await supabase.from('user_words').insert({
-        user_id: user.id,
-        word_id: wordId,
-        status: 'learning',
-        ease_factor: 2.5,
-        interval: 0,
-        next_review: new Date().toISOString()
-      });
-      toast.success('✓ Word added to your learning list!');
-      fetchData();
-    } catch (error) {
-      toast.error('Something went wrong. Try again.');
-      console.error(error);
-    }
+
+    await supabase.from('user_words').insert({
+      user_id: user.id,
+      word_id: wordId,
+      status: 'learning',
+      ease_factor: 2.5,
+      interval: 0,
+      next_review: new Date().toISOString()
+    });
+
+    fetchData(); // refresh view
   };
 
   const isLearned = (wordId: string) =>
@@ -70,68 +66,64 @@ export default function Learn() {
   );
 
   return (
-    <>
-      <Toaster />
-      <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black dark:text-white transition-colors duration-500">
-        <motion.h1
-          className="text-3xl md:text-4xl font-bold text-center text-emerald-700 dark:text-emerald-300 mb-6"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          📚 Learn Quranic Arabic
-        </motion.h1>
+    <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black dark:text-white transition-colors duration-500">
+      <motion.h1
+        className="text-3xl md:text-4xl font-bold text-center text-emerald-700 dark:text-emerald-300 mb-6"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        📚 Learn Quranic Arabic
+      </motion.h1>
 
-        <div className="flex justify-center gap-4 mb-8">
-          {tabs.map((level) => (
-            <button
-              key={level}
-              onClick={() => setActiveTab(level)}
-              className={\`px-4 py-2 rounded-full border text-sm font-medium transition-all \${activeTab === level ? 'bg-emerald-600 text-white shadow-md' : 'bg-white dark:bg-white/10 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300'}\`}
+      <div className="flex justify-center gap-4 mb-8">
+        {tabs.map((level) => (
+          <button
+            key={level}
+            onClick={() => setActiveTab(level)}
+            className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+              activeTab === level
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-white dark:bg-white/10 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
+          >
+            {level.charAt(0).toUpperCase() + level.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <p className="text-center text-gray-500 dark:text-gray-400">Loading...</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-center text-amber-600 dark:text-amber-300">
+          ✨ You’ve learned all words in this level!
+        </p>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 max-w-5xl mx-auto">
+          {filtered.map((word, i) => (
+            <motion.div
+              key={word.id}
+              className="p-6 bg-white/80 dark:bg-white/5 border dark:border-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
             >
-              {level.charAt(0).toUpperCase() + level.slice(1)}
-            </button>
+              <h2 className="text-2xl font-[Scheherazade] mb-1">{word.arabic}</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {word.english} • Root: {word.root}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Ayah: {word.ayah_ref}
+              </p>
+              <button
+                onClick={() => handleLearn(word.id)}
+                className="mt-2 px-4 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-sm"
+              >
+                Start Learning
+              </button>
+            </motion.div>
           ))}
         </div>
-
-        {loading ? (
-          <p className="text-center text-gray-500 dark:text-gray-400">Loading...</p>
-        ) : filtered.length === 0 ? (
-          <p className="text-center text-amber-600 dark:text-amber-300">
-            ✨ You’ve learned all words in this level!
-          </p>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 max-w-5xl mx-auto">
-            {filtered.map((word, i) => (
-              <motion.div
-                key={word.id}
-                className="p-6 bg-white/80 dark:bg-white/5 border dark:border-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <h2 className="text-2xl font-[Scheherazade] mb-1">{word.arabic}</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {word.english} • Root: {word.root}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  Ayah: {word.ayah_ref}
-                </p>
-                <button
-                  onClick={async () => {
-                    setLoadingWordId(word.id);
-                    await handleLearn(word.id);
-                    setLoadingWordId(null);
-                  }}
-                  disabled={loadingWordId === word.id}
-                  className="mt-2 px-4 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loadingWordId === word.id ? 'Adding...' : 'Start Learning'}
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+      )}
+    </div>
   );
 }
