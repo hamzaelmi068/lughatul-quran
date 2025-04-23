@@ -6,13 +6,14 @@ export interface User {
 export interface Word {
   id: string;
   arabic: string;
-  root: string;
   english: string;
-  ayah: string;
-  surah: string;
-  ayahNumber: number;
-  audioUrl?: string;
+  root: string;
+  ayah_ref: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  tag: string;
+  created_at: string;
 }
+
 
 export interface UserWord {
   id: string;

@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import type { Database } from '../lib/database.types';  // Supabase types
+import type { Database } from '../lib/database.types';
+import { useAuth } from '../contexts/AuthContext'; // ✅ Make sure you have this hook
 
 type Word = Database['public']['Tables']['words']['Row'];
 type UserWord = Database['public']['Tables']['user_words']['Row'];
 
 export function useWords() {
+  const { user } = useAuth(); // ✅ get current user
   const [words, setWords] = useState<Word[]>([]);
   const [userWords, setUserWords] = useState<UserWord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchWords = async () => {
+    if (!user) return; // 🛡 prevent undefined behavior
+
     setLoading(true);
     const { data: w } = await supabase.from('words').select('*');
-    const { data: uw } = await supabase.from('user_words').select('*');
+    const { data: uw } = await supabase
+      .from('user_words')
+      .select('*')
+      .eq('user_id', user.id); // ✅ only get this user's words
+
     setWords(w || []);
     setUserWords(uw || []);
     setLoading(false);
@@ -21,12 +29,14 @@ export function useWords() {
 
   useEffect(() => {
     fetchWords();
-  }, []);
+  }, [user]); // ✅ re-fetch when user loads
 
   const updateWordProgress = async (wordId: string, updates: Partial<UserWord>) => {
+    if (!user) return;
     await supabase
       .from('user_words')
       .update(updates)
+      .eq('user_id', user.id) // ✅ scoped update
       .eq('word_id', wordId);
   };
 
@@ -35,7 +45,6 @@ export function useWords() {
     userWords,
     updateWordProgress,
     loading,
-    refetch: fetchWords // ✅ make sure this is exposed
+    refetch: fetchWords
   };
 }
-

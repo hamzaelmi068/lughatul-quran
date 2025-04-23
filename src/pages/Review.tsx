@@ -25,7 +25,7 @@ const { words, userWords, updateWordProgress, loading, refetch } = useWords(); /
 
   const current = reviewQueue[currentIndex];
 
-  const handleReview = async (word: Word & UserWord, quality: 0 | 1 | 2 | 3) => {
+ const handleReview = async (word: Word & UserWord, quality: 0 | 1 | 2 | 3) => {
   const { easeFactor, interval } = calculateNextReview(
     quality,
     word.interval ?? 1,
@@ -42,12 +42,20 @@ const { words, userWords, updateWordProgress, loading, refetch } = useWords(); /
     next_review: nextReview
   });
 
-  // ✅ ADD THIS
-  await refetch(); // re-fetch userWords to exclude the reviewed word
+  // ✅ Immediately remove the reviewed word locally from the queue
+  setCurrentIndex(prev => {
+    const next = prev + 1;
+    return next >= reviewQueue.length ? 0 : next;
+  });
 
   setStreak(q => (quality >= 2 ? q + 1 : 0));
-  setCurrentIndex(0); // Reset index to get next up-to-date word
+
+  // ✅ Then fetch fresh data to keep things in sync
+  setTimeout(() => {
+    refetch();
+  }, 300);
 };
+
 
 
   return (
