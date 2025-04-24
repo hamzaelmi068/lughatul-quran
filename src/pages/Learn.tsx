@@ -81,7 +81,8 @@ export default function Learn() {
       .from('user_words')
       .upsert(update, { onConflict: ['user_id', 'word_id'] });
 
-    fetchData();
+    // ✅ Re-fetch fresh data before rendering next card
+    await fetchData();
   };
 
   const getNextWord = () => {
