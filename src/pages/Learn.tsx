@@ -28,7 +28,6 @@ const easeMap = {
   Easy: 5
 } as const;
 
-
 export default function Learn() {
   const { user } = useAuth();
   const [words, setWords] = useState<Word[]>([]);
@@ -40,7 +39,13 @@ export default function Learn() {
 
   useEffect(() => {
     if (user) fetchData();
-  }, [user, activeTab]);
+  }, [user]);
+
+  useEffect(() => {
+    const word = getNextWord();
+    console.log('Next word:', word);
+    setCurrentWord(word);
+  }, [words, userWords, activeTab]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -52,20 +57,18 @@ export default function Learn() {
 
     setWords(wordList || []);
     setUserWords(userData || []);
-    const next = getNextWord(wordList || [], userData || []);
-    setCurrentWord(next);
     setLoading(false);
   };
 
-  const getNextWord = (wordList: Word[], userData: UserWord[]) => {
+  const getNextWord = () => {
     const now = new Date();
-    return wordList.find((w) => {
-      const uw = userData.find((uw) => uw.word_id === w.id);
+    return words.find((w) => {
+      const uw = userWords.find((uw) => uw.word_id === w.id);
       return (
         w.level === activeTab &&
         (!uw || new Date(uw.next_review || 0) <= now)
       );
-    });
+    }) || null;
   };
 
   const handleReview = async (word: Word, quality: keyof typeof easeMap) => {
@@ -92,18 +95,11 @@ export default function Learn() {
       next_review: nextReview
     };
 
-    await supabase.from('user_words').upsert(update, { onConflict: ['user_id', 'word_id'] });
-
-    const { data: wordList } = await supabase.from('words').select('*');
-    const { data: userData } = await supabase
+    await supabase
       .from('user_words')
-      .select('*')
-      .eq('user_id', user?.id);
+      .upsert(update, { onConflict: ['user_id', 'word_id'] });
 
-    setWords(wordList || []);
-    setUserWords(userData || []);
-    const next = getNextWord(wordList || [], userData || []);
-    setCurrentWord(next);
+    await fetchData(); // Trigger refresh, which updates currentWord through useEffect
   };
 
   return (
