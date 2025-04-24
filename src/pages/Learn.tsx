@@ -77,12 +77,10 @@ export default function Learn() {
       next_review: nextReview
     };
 
-    await supabase
-      .from('user_words')
-      .upsert(update, { onConflict: ['user_id', 'word_id'] });
+    await supabase.from('user_words').upsert(update, { onConflict: ['user_id', 'word_id'] });
 
-    // ✅ Re-fetch fresh data before rendering next card
-    await fetchData();
+    // ✅ Optimistically remove word from queue
+    setUserWords((prev) => prev.filter((w) => w.word_id !== word.id));
   };
 
   const getNextWord = () => {
