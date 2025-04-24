@@ -35,10 +35,11 @@ export default function Learn() {
   const [activeTab, setActiveTab] = useState('beginner');
   const [loading, setLoading] = useState(true);
   const [reverse, setReverse] = useState(false);
+  const [currentWord, setCurrentWord] = useState<Word | null>(null);
 
   useEffect(() => {
     if (user) fetchData();
-  }, [user]);
+  }, [user, activeTab]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -50,7 +51,19 @@ export default function Learn() {
 
     setWords(wordList || []);
     setUserWords(userData || []);
+    setCurrentWord(getNextWord(wordList || [], userData || []));
     setLoading(false);
+  };
+
+  const getNextWord = (wordList = words, userData = userWords) => {
+    const now = new Date();
+    return wordList.find((w) => {
+      const uw = userData.find((uw) => uw.word_id === w.id);
+      return (
+        w.level === activeTab &&
+        (!uw || new Date(uw.next_review || 0) <= now)
+      );
+    });
   };
 
   const handleReview = async (word: Word, quality: keyof typeof easeMap) => {
@@ -77,24 +90,13 @@ export default function Learn() {
       next_review: nextReview
     };
 
-    await supabase.from('user_words').upsert(update, { onConflict: ['user_id', 'word_id'] });
+    await supabase
+      .from('user_words')
+      .upsert(update, { onConflict: ['user_id', 'word_id'] });
 
-    // ✅ Optimistically remove word from queue
-    setUserWords((prev) => prev.filter((w) => w.word_id !== word.id));
+    await fetchData();
+    setCurrentWord(getNextWord());
   };
-
-  const getNextWord = () => {
-    const now = new Date();
-    return words.find((w) => {
-      const uw = userWords.find((uw) => uw.word_id === w.id);
-      return (
-        w.level === activeTab &&
-        (!uw || new Date(uw.next_review || 0) <= now)
-      );
-    });
-  };
-
-  const word = getNextWord();
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black dark:text-white transition-colors duration-500">
@@ -132,7 +134,7 @@ export default function Learn() {
 
       {loading ? (
         <p className="text-center text-gray-400">Loading...</p>
-      ) : !word ? (
+      ) : !currentWord ? (
         <p className="text-center text-amber-600 dark:text-amber-300">
           🎉 You’ve learned all available words at this level!
         </p>
@@ -143,20 +145,20 @@ export default function Learn() {
           animate={{ opacity: 1, y: 0 }}
         >
           <h2 className="text-2xl text-center font-[Scheherazade] mb-2">
-            {reverse ? word.english : word.arabic}
+            {reverse ? currentWord.english : currentWord.arabic}
           </h2>
           <p className="text-center text-gray-600 dark:text-gray-400 mb-1">
-            {reverse ? word.arabic : word.english}
+            {reverse ? currentWord.arabic : currentWord.english}
           </p>
           <p className="text-center text-xs text-gray-500 dark:text-gray-400 mb-4">
-            Ayah: {word.ayah_ref} • Root: {word.root}
+            Ayah: {currentWord.ayah_ref} • Root: {currentWord.root}
           </p>
 
           <div className="flex justify-between gap-2 mt-4">
             {(['Again', 'Hard', 'Good', 'Easy'] as const).map((label) => (
               <button
                 key={label}
-                onClick={() => handleReview(word, label)}
+                onClick={() => handleReview(currentWord, label)}
                 className="flex-1 text-sm py-2 rounded font-semibold bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-white dark:hover:bg-emerald-600"
               >
                 {label}
