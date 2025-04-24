@@ -28,6 +28,7 @@ const easeMap = {
   Easy: 5
 } as const;
 
+
 export default function Learn() {
   const { user } = useAuth();
   const [words, setWords] = useState<Word[]>([]);
@@ -51,11 +52,12 @@ export default function Learn() {
 
     setWords(wordList || []);
     setUserWords(userData || []);
-    setCurrentWord(getNextWord(wordList || [], userData || []));
+    const next = getNextWord(wordList || [], userData || []);
+    setCurrentWord(next);
     setLoading(false);
   };
 
-  const getNextWord = (wordList = words, userData = userWords) => {
+  const getNextWord = (wordList: Word[], userData: UserWord[]) => {
     const now = new Date();
     return wordList.find((w) => {
       const uw = userData.find((uw) => uw.word_id === w.id);
@@ -90,12 +92,18 @@ export default function Learn() {
       next_review: nextReview
     };
 
-    await supabase
-      .from('user_words')
-      .upsert(update, { onConflict: ['user_id', 'word_id'] });
+    await supabase.from('user_words').upsert(update, { onConflict: ['user_id', 'word_id'] });
 
-    await fetchData();
-    setCurrentWord(getNextWord());
+    const { data: wordList } = await supabase.from('words').select('*');
+    const { data: userData } = await supabase
+      .from('user_words')
+      .select('*')
+      .eq('user_id', user?.id);
+
+    setWords(wordList || []);
+    setUserWords(userData || []);
+    const next = getNextWord(wordList || [], userData || []);
+    setCurrentWord(next);
   };
 
   return (
