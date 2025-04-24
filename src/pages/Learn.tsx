@@ -39,13 +39,7 @@ export default function Learn() {
 
   useEffect(() => {
     if (user) fetchData();
-  }, [user]);
-
-  useEffect(() => {
-    const word = getNextWord();
-    console.log('Next word:', word);
-    setCurrentWord(word);
-  }, [words, userWords, activeTab]);
+  }, [user, activeTab]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -57,13 +51,14 @@ export default function Learn() {
 
     setWords(wordList || []);
     setUserWords(userData || []);
+    setCurrentWord(getNextWord(wordList || [], userData || []));
     setLoading(false);
   };
 
-  const getNextWord = () => {
+  const getNextWord = (wordList = words, userData = userWords) => {
     const now = new Date();
-    return words.find((w) => {
-      const uw = userWords.find((uw) => uw.word_id === w.id);
+    return wordList.find((w) => {
+      const uw = userData.find((uw) => uw.word_id === w.id);
       return (
         w.level === activeTab &&
         (!uw || new Date(uw.next_review || 0) <= now)
@@ -86,20 +81,29 @@ export default function Learn() {
     const nextReview = new Date(Date.now() + newInterval * 86400000).toISOString();
     const status = quality === 'Easy' ? 'mastered' : 'learning';
 
-    const update = {
-      user_id: user!.id,
-      word_id: word.id,
-      status,
-      ease_factor: newEF,
-      interval: Math.round(newInterval),
-      next_review: nextReview
-    };
-
-    await supabase
+    const upsertResult = await supabase
       .from('user_words')
-      .upsert(update, { onConflict: ['user_id', 'word_id'] });
+      .upsert({
+        user_id: user!.id,
+        word_id: word.id,
+        status,
+        ease_factor: newEF,
+        interval: Math.round(newInterval),
+        next_review: nextReview
+      }, { onConflict: ['user_id', 'word_id'] });
 
-    await fetchData(); // Trigger refresh, which updates currentWord through useEffect
+    if (upsertResult.error) {
+      console.error('Error upserting user_word:', upsertResult.error);
+      return;
+    }
+
+    const { data: updatedUserWords } = await supabase
+      .from('user_words')
+      .select('*')
+      .eq('user_id', user!.id);
+
+    setUserWords(updatedUserWords || []);
+    setCurrentWord(getNextWord(words, updatedUserWords || []));
   };
 
   return (
