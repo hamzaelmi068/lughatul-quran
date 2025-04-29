@@ -35,8 +35,7 @@ export default function Learn() {
   const [activeTab, setActiveTab] = useState('beginner');
   const [loading, setLoading] = useState(true);
   const [reverse, setReverse] = useState(false);
-  const [currentQueue, setCurrentQueue] = useState<Word[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentWord, setCurrentWord] = useState<Word | null>(null);
 
   useEffect(() => {
     if (user) fetchData();
@@ -52,20 +51,20 @@ export default function Learn() {
 
     setWords(wordList || []);
     setUserWords(userData || []);
+    const next = getNextWord(wordList || [], userData || []);
+    setCurrentWord(next);
+    setLoading(false);
+  };
 
+  const getNextWord = (wordList = words, userData = userWords) => {
     const now = new Date();
-
-    const queue = (wordList || []).filter((w) => {
-      const uw = (userData || []).find((uw) => uw.word_id === w.id);
+    return wordList.find((w) => {
+      const uw = userData.find((uw) => uw.word_id === w.id);
       return (
         w.level === activeTab &&
-        (!uw || new Date(uw.next_review) <= now)
+        (!uw || new Date(uw.next_review || 0) <= now)
       );
     });
-
-    setCurrentQueue(queue);
-    setCurrentIndex(0);
-    setLoading(false);
   };
 
   const handleReview = async (word: Word, quality: keyof typeof easeMap) => {
@@ -83,24 +82,31 @@ export default function Learn() {
     const nextReview = new Date(Date.now() + newInterval * 86400000).toISOString();
     const status = quality === 'Easy' ? 'mastered' : 'learning';
 
-    const { error } = await supabase.from('user_words').upsert({
-      user_id: user!.id,
-      word_id: word.id,
-      status,
-      ease_factor: newEF,
-      interval: Math.round(newInterval),
-      next_review: nextReview
-    }, { onConflict: ['user_id', 'word_id'] });
+    const upsertResult = await supabase
+      .from('user_words')
+      .upsert({
+        user_id: user!.id,
+        word_id: word.id,
+        status,
+        ease_factor: newEF,
+        interval: Math.round(newInterval),
+        next_review: nextReview
+      }, { onConflict: ['user_id', 'word_id'] });
 
-    if (error) {
-      console.error(error);
+    if (upsertResult.error) {
+      console.error('Error upserting user_word:', upsertResult.error);
       return;
     }
 
-    setCurrentIndex((prev) => prev + 1);
-  };
+    const { data: updatedUserWords } = await supabase
+      .from('user_words')
+      .select('*')
+      .eq('user_id', user!.id);
 
-  const currentWord = currentQueue[currentIndex] || null;
+    setUserWords(updatedUserWords || []);
+    const next = getNextWord(words, updatedUserWords || []);
+    setCurrentWord(next);
+  };
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black dark:text-white transition-colors duration-500">
@@ -140,7 +146,7 @@ export default function Learn() {
         <p className="text-center text-gray-400">Loading...</p>
       ) : !currentWord ? (
         <p className="text-center text-amber-600 dark:text-amber-300">
-          🎉 You’ve reviewed all words in this level!
+          🎉 You’ve learned all available words at this level!
         </p>
       ) : (
         <motion.div
