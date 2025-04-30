@@ -7,7 +7,7 @@ function Profile() {
   const { user } = useAuth();
   const { userWords } = useWords();
 
-  const learnedCount = userWords.length;
+  const learnedCount = userWords.filter((w) => w.status === 'learning' || w.status === 'mastered').length;
   const masteredCount = userWords.filter((uw) => uw.status === 'mastered').length;
   const streakCount = 0;
 
