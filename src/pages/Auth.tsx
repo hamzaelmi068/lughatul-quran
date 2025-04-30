@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { Book } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient'; // ✅ import Supabase client
 
 export default function Auth() {
   const { signIn, signUp, signInAnonymously } = useAuth();
@@ -19,9 +20,21 @@ export default function Auth() {
       if (isLogin) {
         await signIn(email, password);
       } else {
-        await signUp(email, password);
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (signUpError) throw signUpError;
+
+        const userId = data.user?.id;
+        if (userId) {
+          // ✅ call initialization RPC
+          const { error: rpcError } = await supabase.rpc('initialize_user_words', { new_user_id: userId });
+          if (rpcError) throw rpcError;
+        }
       }
-      navigate('/'); // Redirect to home (or could go to /learn)
+      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     }
