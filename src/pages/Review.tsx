@@ -17,6 +17,9 @@ const Review = () => {
 
   useEffect(() => {
     if (!loading) {
+      if (userWords.length === 0) {
+          console.warn("🚨 No userWords returned. This likely means Supabase isn't fetching any rows.");
+        }
       const now = new Date();
 
       const reviewable = userWords
@@ -30,6 +33,7 @@ const Review = () => {
       if (debug) {
         console.log('🧠 All userWords:', userWords);
         console.log('🕰️ Now:', now.toISOString());
+        console.log("👤 Auth user ID:", userWords[0]?.user_id);
         console.log('✅ Reviewable:', reviewable.map(w => ({
           word_id: w.word_id,
           arabic: w.arabic,
