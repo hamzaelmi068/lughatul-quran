@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { Book } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient'; // ✅ import Supabase client
+import { supabase } from '../lib/supabaseClient';
 
 export default function Auth() {
   const { signIn, signUp, signInAnonymously } = useAuth();
@@ -20,18 +20,20 @@ export default function Auth() {
       if (isLogin) {
         await signIn(email, password);
       } else {
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        // Sign up and get the new user's ID
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
         });
 
         if (signUpError) throw signUpError;
 
-        const userId = data.user?.id;
-        if (userId) {
-          // ✅ call initialization RPC
-          const { error: rpcError } = await supabase.rpc('initialize_user_words', { new_user_id: userId });
-          if (rpcError) throw rpcError;
+        // Initialize words for the new user
+        if (authData.user) {
+          const { error: initError } = await supabase.rpc('initialize_user_words', {
+            new_user_id: authData.user.id
+          });
+          if (initError) throw initError;
         }
       }
       navigate('/');
@@ -47,7 +49,20 @@ export default function Auth() {
 
   const handleGuestLogin = async () => {
     try {
-      await signInAnonymously();
+      const { data: { user }, error } = await supabase.auth.signUp({
+        email: `guest_${Date.now()}@temporary.com`,
+        password: `guest${Date.now()}`,
+      });
+      
+      if (error) throw error;
+      
+      // Initialize words for guest user
+      if (user) {
+        await supabase.rpc('initialize_user_words', {
+          new_user_id: user.id
+        });
+      }
+      
       navigate('/');
     } catch (err: any) {
       setError('Failed to sign in as guest');
