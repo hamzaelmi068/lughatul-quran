@@ -1,4 +1,3 @@
-// src/components/Navbar.tsx
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
@@ -9,7 +8,7 @@ const Navbar = () => {
   const links = [
     { to: '/', label: 'Home' },
     { to: '/learn', label: 'Learn' },
-    { to: '/review', label: 'Review' },
+    { to: '/vocabulary', label: 'My Vocabulary' },
     { to: '/profile', label: 'Profile' }
   ];
 
