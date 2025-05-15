@@ -11,40 +11,39 @@ const Review = () => {
   const [streak, setStreak] = useState(0);
   const [queue, setQueue] = useState<(Word & UserWord)[]>([]);
   const [current, setCurrent] = useState<Word & UserWord | null>(null);
-  const [debug, setDebug] = useState(false);
 
   const { words, userWords, updateWordProgress, loading, refetch } = useWords();
 
   useEffect(() => {
     if (!loading) {
-      if (userWords.length === 0) {
-          console.warn("🚨 No userWords returned. This likely means Supabase isn't fetching any rows.");
-        }
       const now = new Date();
+      console.log("✅ Now:", now.toISOString());
 
-      const reviewable = userWords
-        .filter((uw) => uw.next_review && new Date(uw.next_review) <= now)
+      const queue = userWords
+        .filter((w) => {
+          const due = w.next_review && new Date(w.next_review) <= now;
+          if (!due) {
+            console.log("⛔ Skipped:", {
+              word_id: w.word_id,
+              next_review: w.next_review,
+              now: now.toISOString(),
+            });
+          }
+          return due;
+        })
         .map((uw) => {
           const word = words.find((w) => w.id === uw.word_id);
+          if (!word) {
+            console.log("⚠️ Word not found for:", uw.word_id);
+          }
           return word ? { ...word, ...uw } : null;
         })
         .filter(Boolean) as (Word & UserWord)[];
 
-      if (debug) {
-        console.log('🧠 All userWords:', userWords);
-        console.log('🕰️ Now:', now.toISOString());
-        console.log("👤 Auth user ID:", userWords[0]?.user_id);
-        console.log('✅ Reviewable:', reviewable.map(w => ({
-          word_id: w.word_id,
-          arabic: w.arabic,
-          next_review: w.next_review,
-        })));
-      }
-
-      setQueue(reviewable);
-      setCurrent(reviewable[0] ?? null);
+      setQueue(queue);
+      setCurrent(queue[0] ?? null);
     }
-  }, [loading, userWords, words, debug]);
+  }, [loading, words, userWords]);
 
   const handleReview = async (quality: 0 | 1 | 2 | 3) => {
     if (!current) return;
@@ -67,29 +66,25 @@ const Review = () => {
     setCurrent(nextQueue[0] ?? null);
     setStreak((s) => (quality >= 2 ? s + 1 : 0));
 
-    setTimeout(() => refetch(), 300);
+    setTimeout(() => {
+      refetch();
+    }, 250);
   };
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">
-          🔁 Review Session
-        </h1>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={debug} onChange={() => setDebug(!debug)} />
-          Showing All
-        </label>
-      </div>
+      <h1 className="text-3xl font-bold text-center mb-6 text-emerald-700 dark:text-emerald-300">
+        🔁 Review Session
+      </h1>
 
       {loading ? (
-        <p className="text-center text-gray-500">Loading...</p>
+        <p className="text-center text-gray-500 dark:text-gray-400">Loading...</p>
       ) : !current ? (
         <div className="text-center text-amber-600 dark:text-amber-400">
           🎉 You’re all caught up for now!
-          {debug && queue.length === 0 && (
-            <p className="mt-4 text-xs text-pink-400">⚠️ Debug: No current words matched — check next_review logic or word/user sync.</p>
-          )}
+          <div className="text-xs text-pink-500 mt-1">
+            ⚠️ Debug: No current words matched — check <code>next_review</code> logic or word/user sync.
+          </div>
         </div>
       ) : (
         <div className="max-w-lg mx-auto text-center bg-white/80 dark:bg-white/5 p-8 rounded-xl shadow-md border dark:border-gray-700">
