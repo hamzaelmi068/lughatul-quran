@@ -1,64 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, BookOpen, Award } from 'lucide-react';
 import { useWords } from '../hooks/useWords';
 import type { Database } from '../lib/database.types';
 
 type Word = Database['public']['Tables']['words']['Row'];
 type UserWord = Database['public']['Tables']['user_words']['Row'];
-
-type WordWithProgress = Word & {
-  status: UserWord['status'];
-  last_reviewed: UserWord['last_reviewed'];
-};
-
-const LEVELS = ['beginner', 'intermediate', 'advanced'] as const;
+type MergedWord = Word & Partial<UserWord>;
 
 export default function MyVocabulary() {
   const { words, userWords, loading } = useWords();
-  const [activeTab, setActiveTab] = useState<typeof LEVELS[number]>('beginner');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedWord, setExpandedWord] = useState<string | null>(null);
 
-  // Combine words with user progress
-  const vocabularyList = React.useMemo(() => {
-    const userWordMap = new Map(userWords.map(uw => [uw.word_id, uw]));
-    
+  const vocabulary: MergedWord[] = useMemo(() => {
+    const map = new Map(userWords.map((uw) => [uw.word_id, uw]));
     return words
-      .map(word => {
-        const userWord = userWordMap.get(word.id);
-        if (!userWord || userWord.status === 'not_started') return null;
-        
+      .map((word) => {
+        const userWord = map.get(word.id);
+        if (!userWord) return null;
         return {
           ...word,
-          status: userWord.status,
-          last_reviewed: userWord.last_reviewed,
+          ...userWord,
         };
       })
-      .filter((w): w is WordWithProgress => w !== null);
+      .filter((w): w is MergedWord => !!w);
   }, [words, userWords]);
 
-  // Filter words based on search and active tab
-  const filteredWords = React.useMemo(() => {
-    return vocabularyList.filter(word => {
-      const matchesSearch = searchQuery === '' || 
-        word.arabic.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        word.english.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (word.root?.toLowerCase() || '').includes(searchQuery.toLowerCase());
-      
-      return matchesSearch;
+  const filtered = useMemo(() => {
+    return vocabulary.filter((w) => {
+      return (
+        w.arabic.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        w.english.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (w.root || '').toLowerCase().includes(searchQuery.toLowerCase())
+      );
     });
-  }, [vocabularyList, searchQuery, activeTab]);
+  }, [searchQuery, vocabulary]);
 
   const stats = {
-    total: vocabularyList.length,
-    learning: vocabularyList.filter(w => w.status === 'learning').length,
-    mastered: vocabularyList.filter(w => w.status === 'mastered').length,
+    total: vocabulary.length,
+    learning: vocabulary.filter((w) => w.status === 'learning').length,
+    mastered: vocabulary.filter((w) => w.status === 'mastered').length,
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-600"></div>
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
       </div>
     );
   }
@@ -66,124 +53,93 @@ export default function MyVocabulary() {
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
       <div className="max-w-6xl mx-auto">
-        {/* Header with Stats */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-6 text-emerald-700 dark:text-emerald-300">
-            📚 My Vocabulary
-          </h1>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-300">Total Words</span>
-                <BookOpen className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <p className="text-2xl font-bold mt-2">{stats.total}</p>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-300">Learning</span>
-                <BookOpen className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <p className="text-2xl font-bold mt-2">{stats.learning}</p>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-300">Mastered</span>
-                <Award className="h-5 w-5 text-green-600 dark:text-green-400" />
-              </div>
-              <p className="text-2xl font-bold mt-2">{stats.mastered}</p>
-            </div>
-          </div>
+        <h1 className="text-3xl font-bold mb-6 text-emerald-700 dark:text-emerald-300">📖 My Vocabulary</h1>
 
-          {/* Search Bar */}
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by Arabic, English, or Root..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div className="flex justify-between">
+              <span>Total Words</span>
+              <BookOpen className="text-emerald-500" size={18} />
+            </div>
+            <p className="text-2xl font-bold mt-2">{stats.total}</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div className="flex justify-between">
+              <span>Learning</span>
+              <BookOpen className="text-amber-500" size={18} />
+            </div>
+            <p className="text-2xl font-bold mt-2">{stats.learning}</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div className="flex justify-between">
+              <span>Mastered</span>
+              <Award className="text-green-500" size={18} />
+            </div>
+            <p className="text-2xl font-bold mt-2">{stats.mastered}</p>
           </div>
         </div>
 
-        {/* Words List */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Arabic
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    English
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Root
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredWords.map((word) => (
-                  <React.Fragment key={word.id}>
-                    <tr
-                      onClick={() => setExpandedWord(expandedWord === word.id ? null : word.id)}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-xl font-arabic">{word.arabic}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
-                        {word.english}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                        {word.root || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            word.status === 'mastered'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                              : 'bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-100'
-                          }`}
-                        >
-                          {word.status === 'mastered' ? 'Mastered' : 'Learning'}
-                        </span>
+        <div className="relative mb-4">
+          <Search className="absolute top-2.5 left-3 text-gray-400" size={18} />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by Arabic, English, or Root..."
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-x-auto shadow">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900">
+              <tr>
+                <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 px-6 py-3">Arabic</th>
+                <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 px-6 py-3">English</th>
+                <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 px-6 py-3">Root</th>
+                <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 px-6 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {filtered.map((word) => (
+                <React.Fragment key={word.id}>
+                  <tr
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                    onClick={() => setExpandedWord(expandedWord === word.id ? null : word.id)}
+                  >
+                    <td className="px-6 py-4 text-xl font-arabic">{word.arabic}</td>
+                    <td className="px-6 py-4">{word.english}</td>
+                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{word.root || '-'}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          word.status === 'mastered'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
+                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200'
+                        }`}
+                      >
+                        {word.status ?? 'learning'}
+                      </span>
+                    </td>
+                  </tr>
+                  {expandedWord === word.id && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-4 bg-gray-50 dark:bg-gray-700 text-sm">
+                        <div className="text-gray-600 dark:text-gray-300 space-y-1">
+                          <p><strong>Ayah Ref:</strong> {word.ayah_ref}</p>
+                          {word.next_review && (
+                            <p><strong>Next Review:</strong> {new Date(word.next_review).toLocaleDateString()}</p>
+                          )}
+                          {word.last_reviewed && (
+                            <p><strong>Last Reviewed:</strong> {new Date(word.last_reviewed).toLocaleDateString()}</p>
+                          )}
+                        </div>
                       </td>
                     </tr>
-                    {expandedWord === word.id && (
-                      <tr className="bg-gray-50 dark:bg-gray-700">
-                        <td colSpan={4} className="px-6 py-4">
-                          <div className="text-sm text-gray-700 dark:text-gray-300">
-                            <p className="mb-2">
-                              <span className="font-semibold">Surah:</span> {word.surah}
-                            </p>
-                            <p className="mb-2">
-                              <span className="font-semibold">Ayah:</span> {word.ayah}
-                            </p>
-                            {word.last_reviewed && (
-                              <p>
-                                <span className="font-semibold">Last Reviewed:</span>{' '}
-                                {new Date(word.last_reviewed).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
