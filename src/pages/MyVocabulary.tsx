@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, BookOpen, Award } from 'lucide-react';
+import { Search, BookOpen, Award, Filter } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import type { Database } from '../lib/database.types';
@@ -9,9 +9,12 @@ type UserWord = Database['public']['Tables']['user_words']['Row'];
 
 type WordWithStatus = Word & Pick<UserWord, 'status'>;
 
+type Level = 'all' | 'beginner' | 'intermediate' | 'advanced';
+
 export default function MyVocabulary() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState<Level>('all');
   const [expandedWord, setExpandedWord] = useState<string | null>(null);
   const [words, setWords] = useState<WordWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,11 +59,14 @@ export default function MyVocabulary() {
 
   const filtered = words.filter((w) => {
     const searchLower = searchQuery.toLowerCase();
-    return (
+    const matchesSearch = 
       w.arabic?.toLowerCase().includes(searchLower) ||
       w.english?.toLowerCase().includes(searchLower) ||
-      w.root?.toLowerCase().includes(searchLower)
-    );
+      w.root?.toLowerCase().includes(searchLower);
+    
+    const matchesLevel = selectedLevel === 'all' || w.level === selectedLevel;
+    
+    return matchesSearch && matchesLevel;
   });
 
   const stats = {
@@ -106,14 +112,27 @@ export default function MyVocabulary() {
           </div>
         </div>
 
-        <div className="relative mb-4">
-          <Search className="absolute top-2.5 left-3 text-gray-400" size={18} />
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by Arabic, English, or Root..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
+        <div className="flex gap-4 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute top-2.5 left-3 text-gray-400" size={18} />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by Arabic, English, or Root..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
+          <select
+            value={selectedLevel}
+            onChange={(e) => setSelectedLevel(e.target.value as Level)}
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="all">All Levels</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg overflow-x-auto shadow">
@@ -123,6 +142,7 @@ export default function MyVocabulary() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Arabic</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">English</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Root</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Level</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
               </tr>
             </thead>
@@ -137,22 +157,31 @@ export default function MyVocabulary() {
                     <td className="px-6 py-4">{word.english}</td>
                     <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{word.root}</td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          word.status === 'mastered'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
-                            : word.status === 'learning'
-                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200'
-                            : 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200'
-                        }`}
-                      >
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        word.level === 'beginner'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                          : word.level === 'intermediate'
+                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200'
+                      }`}>
+                        {word.level}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        word.status === 'mastered'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
+                          : word.status === 'learning'
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200'
+                          : 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200'
+                      }`}>
                         {word.status}
                       </span>
                     </td>
                   </tr>
                   {expandedWord === word.id && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-4 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                      <td colSpan={5} className="px-6 py-4 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
                         <p><strong>Surah:</strong> {word.surah}</p>
                         <p><strong>Ayah:</strong> {word.ayah}</p>
                         <p><strong>Ayah Number:</strong> {word.ayah_number}</p>
