@@ -1,106 +1,170 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { Search, BookOpen, Award } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
+import type { Database } from '../lib/database.types';
 
-type Word = {
-  arabic: string;
-  english: string;
-  root: string;
-  ayah_ref: string;
-  level: 'beginner' | 'intermediate' | 'advanced';
-  status: 'learning' | 'mastered';
-  next_review: string;
-};
+type Word = Database['public']['Tables']['words']['Row'];
+type UserWord = Database['public']['Tables']['user_words']['Row'];
 
-const vocabulary: Word[] = [
-  { arabic: 'صلاة', english: 'Prayer', root: 'ص-ل-و', ayah_ref: '2:3', level: 'beginner', status: 'learning', next_review: '2025-05-16' },
-  { arabic: 'إيمان', english: 'Faith', root: 'أ-م-ن', ayah_ref: '2:9', level: 'beginner', status: 'learning', next_review: '2025-05-16' },
-  // ... (rest of the 300+ entries go here, will provide separate file if needed)
-];
-
-const levels: Array<Word['level']> = ['beginner', 'intermediate', 'advanced'];
+type WordWithStatus = Word & Pick<UserWord, 'status'>;
 
 export default function MyVocabulary() {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({
-    beginner: true,
-    intermediate: false,
-    advanced: false,
+  const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedWord, setExpandedWord] = useState<string | null>(null);
+  const [words, setWords] = useState<WordWithStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchWords() {
+      if (!user) return;
+
+      try {
+        setLoading(true);
+        
+        // Fetch all words and user's progress in parallel
+        const [wordsResponse, userWordsResponse] = await Promise.all([
+          supabase.from('words').select('*'),
+          supabase.from('user_words')
+            .select('*')
+            .eq('user_id', user.id)
+        ]);
+
+        if (wordsResponse.error) throw wordsResponse.error;
+        if (userWordsResponse.error) throw userWordsResponse.error;
+
+        // Combine words with user progress
+        const wordsWithStatus = wordsResponse.data.map(word => {
+          const userWord = userWordsResponse.data.find(uw => uw.word_id === word.id);
+          return {
+            ...word,
+            status: userWord?.status || 'not_started'
+          };
+        });
+
+        setWords(wordsWithStatus);
+      } catch (error) {
+        console.error('Error fetching words:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchWords();
+  }, [user]);
+
+  const filtered = words.filter((w) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      w.arabic?.toLowerCase().includes(searchLower) ||
+      w.english?.toLowerCase().includes(searchLower) ||
+      w.root?.toLowerCase().includes(searchLower)
+    );
   });
 
-  const grouped: Record<string, Word[]> = {
-    beginner: [],
-    intermediate: [],
-    advanced: [],
+  const stats = {
+    total: words.length,
+    learning: words.filter((w) => w.status === 'learning').length,
+    mastered: words.filter((w) => w.status === 'mastered').length,
   };
 
-  vocabulary.forEach((word) => {
-    grouped[word.level].push(word);
-  });
-
-  const toggleExpand = (level: string) =>
-    setExpanded((prev) => ({ ...prev, [level]: !prev[level] }));
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-[#052d1b] text-gray-900 dark:text-white transition-colors duration-500">
-      <h1 className="text-3xl font-bold mb-10 text-emerald-700 dark:text-emerald-300 text-center drop-shadow-[0_1px_1px_rgba(0,255,170,0.4)]">
-        📖 My Vocabulary
-      </h1>
+    <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6 text-emerald-700 dark:text-emerald-300">📖 My Vocabulary</h1>
 
-      {levels.map((level) => (
-        <div key={level} className="border-t border-emerald-300/30 pt-6 mt-6">
-          <button
-            onClick={() => toggleExpand(level)}
-            className="flex items-center gap-2 mb-3 font-semibold text-lg text-emerald-600 dark:text-emerald-300"
-          >
-            {expanded[level] ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-            {level.charAt(0).toUpperCase() + level.slice(1)} ({grouped[level].length})
-          </button>
-
-          <AnimatePresence initial={false}>
-            {expanded[level] && (
-              <motion.div
-                className="space-y-4"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {grouped[level].length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 ml-6">
-                    No words yet for this level.
-                  </p>
-                ) : (
-                  grouped[level].map((w, idx) => (
-                    <div
-                      key={`${w.arabic}-${idx}`}
-                      className="bg-white dark:bg-[#10291d] border dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 p-4"
-                    >
-                      <div className="flex justify-between items-center mb-1">
-                        <h2 className="text-xl font-[Scheherazade]">{w.arabic}</h2>
-                        <span
-                          className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                            w.status === 'mastered'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                          }`}
-                        >
-                          {w.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                        {w.english} • Root: {w.root}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Ayah: {w.ayah_ref} • Next Review: {new Date(w.next_review).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div className="flex justify-between">
+              <span>Total Words</span>
+              <BookOpen className="text-emerald-500" size={18} />
+            </div>
+            <p className="text-2xl font-bold mt-2">{stats.total}</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div className="flex justify-between">
+              <span>Learning</span>
+              <BookOpen className="text-amber-500" size={18} />
+            </div>
+            <p className="text-2xl font-bold mt-2">{stats.learning}</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div className="flex justify-between">
+              <span>Mastered</span>
+              <Award className="text-green-500" size={18} />
+            </div>
+            <p className="text-2xl font-bold mt-2">{stats.mastered}</p>
+          </div>
         </div>
-      ))}
+
+        <div className="relative mb-4">
+          <Search className="absolute top-2.5 left-3 text-gray-400" size={18} />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by Arabic, English, or Root..."
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-x-auto shadow">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Arabic</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">English</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Root</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {filtered.map((word) => (
+                <React.Fragment key={word.id}>
+                  <tr
+                    onClick={() => setExpandedWord(expandedWord === word.id ? null : word.id)}
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                  >
+                    <td className="px-6 py-4 text-xl font-[Scheherazade]">{word.arabic}</td>
+                    <td className="px-6 py-4">{word.english}</td>
+                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{word.root}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          word.status === 'mastered'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
+                            : word.status === 'learning'
+                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200'
+                        }`}
+                      >
+                        {word.status}
+                      </span>
+                    </td>
+                  </tr>
+                  {expandedWord === word.id && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-4 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                        <p><strong>Surah:</strong> {word.surah}</p>
+                        <p><strong>Ayah:</strong> {word.ayah}</p>
+                        <p><strong>Ayah Number:</strong> {word.ayah_number}</p>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
