@@ -155,10 +155,12 @@ export default function MyVocabulary() {
             </table>
           </div>
         </div> */}
-     /* </div>
-    </div>
-  );
-} */
+//      </div>
+//    </div>
+//  );
+//}
+
+
 
 
 import React, { useEffect, useState } from 'react';
