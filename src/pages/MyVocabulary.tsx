@@ -1,54 +1,43 @@
 import React, { useState, useMemo } from 'react';
 import { Search, BookOpen, Award } from 'lucide-react';
-import { useWords } from '../hooks/useWords';
-import type { Database } from '../lib/database.types';
 
-type Word = Database['public']['Tables']['words']['Row'];
-type UserWord = Database['public']['Tables']['user_words']['Row'];
-type MergedWord = Word & Partial<UserWord>;
+type Word = {
+  arabic: string;
+  english: string;
+  root: string;
+  ayah_ref: string;
+  level: string;
+  status: 'learning' | 'mastered';
+};
+
+const vocabList: Word[] = [
+  { arabic: 'رَحْمَٰن', english: 'Most Merciful', root: 'ر ح م', ayah_ref: '1:3', level: 'beginner', status: 'learning' },
+  { arabic: 'كِتَاب', english: 'Book', root: 'ك ت ب', ayah_ref: '2:2', level: 'beginner', status: 'mastered' },
+  { arabic: 'صَلَاة', english: 'Prayer', root: 'ص ل و', ayah_ref: '2:3', level: 'intermediate', status: 'learning' },
+  { arabic: 'إِيمَان', english: 'Faith', root: 'أ م ن', ayah_ref: '2:9', level: 'intermediate', status: 'mastered' },
+  { arabic: 'نُور', english: 'Light', root: 'ن و ر', ayah_ref: '24:35', level: 'advanced', status: 'learning' },
+  // ⬆️ Add more entries here as needed.
+];
 
 export default function MyVocabulary() {
-  const { words, userWords, loading } = useWords();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedWord, setExpandedWord] = useState<string | null>(null);
 
-  const vocabulary: MergedWord[] = useMemo(() => {
-    const map = new Map(userWords.map((uw) => [uw.word_id, uw]));
-    return words
-      .map((word) => {
-        const userWord = map.get(word.id);
-        if (!userWord) return null;
-        return {
-          ...word,
-          ...userWord,
-        };
-      })
-      .filter((w): w is MergedWord => !!w);
-  }, [words, userWords]);
-
   const filtered = useMemo(() => {
-    return vocabulary.filter((w) => {
+    return vocabList.filter((w) => {
       return (
         w.arabic.toLowerCase().includes(searchQuery.toLowerCase()) ||
         w.english.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (w.root || '').toLowerCase().includes(searchQuery.toLowerCase())
+        w.root.toLowerCase().includes(searchQuery.toLowerCase())
       );
     });
-  }, [searchQuery, vocabulary]);
+  }, [searchQuery]);
 
   const stats = {
-    total: vocabulary.length,
-    learning: vocabulary.filter((w) => w.status === 'learning').length,
-    mastered: vocabulary.filter((w) => w.status === 'mastered').length,
+    total: vocabList.length,
+    learning: vocabList.filter((w) => w.status === 'learning').length,
+    mastered: vocabList.filter((w) => w.status === 'mastered').length,
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
@@ -93,22 +82,24 @@ export default function MyVocabulary() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 px-6 py-3">Arabic</th>
-                <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 px-6 py-3">English</th>
-                <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 px-6 py-3">Root</th>
-                <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 px-6 py-3">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Arabic</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">English</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Root</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filtered.map((word) => (
-                <React.Fragment key={word.id}>
+              {filtered.map((word, index) => (
+                <React.Fragment key={index}>
                   <tr
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                    onClick={() => setExpandedWord(expandedWord === word.id ? null : word.id)}
+                    onClick={() =>
+                      setExpandedWord(expandedWord === word.arabic ? null : word.arabic)
+                    }
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                   >
-                    <td className="px-6 py-4 text-xl font-arabic">{word.arabic}</td>
+                    <td className="px-6 py-4 text-xl font-[Scheherazade]">{word.arabic}</td>
                     <td className="px-6 py-4">{word.english}</td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{word.root || '-'}</td>
+                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{word.root}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
@@ -117,22 +108,15 @@ export default function MyVocabulary() {
                             : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200'
                         }`}
                       >
-                        {word.status ?? 'learning'}
+                        {word.status}
                       </span>
                     </td>
                   </tr>
-                  {expandedWord === word.id && (
+                  {expandedWord === word.arabic && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-4 bg-gray-50 dark:bg-gray-700 text-sm">
-                        <div className="text-gray-600 dark:text-gray-300 space-y-1">
-                          <p><strong>Ayah Ref:</strong> {word.ayah_ref}</p>
-                          {word.next_review && (
-                            <p><strong>Next Review:</strong> {new Date(word.next_review).toLocaleDateString()}</p>
-                          )}
-                          {word.last_reviewed && (
-                            <p><strong>Last Reviewed:</strong> {new Date(word.last_reviewed).toLocaleDateString()}</p>
-                          )}
-                        </div>
+                      <td colSpan={4} className="px-6 py-4 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                        <p><strong>Ayah Ref:</strong> {word.ayah_ref}</p>
+                        <p><strong>Level:</strong> {word.level}</p>
                       </td>
                     </tr>
                   )}
@@ -145,3 +129,4 @@ export default function MyVocabulary() {
     </div>
   );
 }
+
