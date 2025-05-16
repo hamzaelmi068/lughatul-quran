@@ -8,7 +8,7 @@ const Navbar = () => {
   const links = [
     { to: '/', label: 'Home' },
     { to: '/learn', label: 'Learn' },
-    { to: '/vocabulary', label: 'My Vocabulary' },
+    { to: '/myvocabulary', label: 'My Vocabulary' },
     { to: '/profile', label: 'Profile' }
   ];
 
