@@ -26,7 +26,7 @@ function App() {
             } 
           />
           <Route 
-            path="/vocabulary" 
+            path="/myvocabulary" 
             element={
               <ProtectedRoute>
                 <MyVocabulary />

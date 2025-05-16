@@ -17,7 +17,7 @@ const Home = () => {
       title: 'Spaced Repetition',
       description: 'An Anki-style method to enhance long-term recall of Arabic terms.',
       icon: Repeat,
-      onClick: () => navigate('/myvocabulary')
+      onClick: () => navigate('/MyVocabulary')
     },
     {
       title: 'Track Your Progress',
