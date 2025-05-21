@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { motion } from 'framer-motion';
-// 
+
 interface Word {
   id: string;
   arabic: string;
@@ -10,7 +10,7 @@ interface Word {
   root: string;
   ayah_ref: string;
   level: string;
-  tag: string;
+  tag?: string;
 }
 
 interface UserWord {
@@ -22,7 +22,7 @@ interface UserWord {
 }
 
 const tabs = ['beginner', 'intermediate', 'advanced'];
-const decks = ['Quranic', 'Everyday', 'All'];
+const decks = ['Quranic', 'Everyday', 'all'] as const;
 const easeMap = {
   Again: 1,
   Hard: 3,
@@ -30,14 +30,18 @@ const easeMap = {
   Easy: 5,
 } as const;
 
-export default function Learn() {
+type DeckType = typeof decks[number];
+
+type Props = {};
+
+export default function Learn({}: Props) {
   const { user } = useAuth();
   const [words, setWords] = useState<Word[]>([]);
   const [userWords, setUserWords] = useState<UserWord[]>([]);
   const [queue, setQueue] = useState<Word[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('beginner');
-  const [activeDeck, setActiveDeck] = useState('Quranic');
+  const [activeDeck, setActiveDeck] = useState<DeckType>('Quranic');
   const [loading, setLoading] = useState(true);
   const [reverse, setReverse] = useState(false);
 
@@ -56,10 +60,9 @@ export default function Learn() {
     const now = new Date();
     const filtered = (wordList || []).filter((w) => {
       const uw = (userData || []).find((u) => u.word_id === w.id);
-      const matchesDeck = activeDeck === 'All' || w.tag === activeDeck;
       return (
         w.level === activeTab &&
-        matchesDeck &&
+        (activeDeck === 'all' || w.tag === activeDeck) &&
         (!uw || !uw.next_review || new Date(uw.next_review) <= now)
       );
     });
@@ -76,7 +79,10 @@ export default function Learn() {
     const ef = existing?.ease_factor ?? 2.5;
     const interval = existing?.interval ?? 1;
 
-    let newEF = Math.max(1.3, ef + (0.1 - (5 - easeMap[quality]) * (0.08 + (5 - easeMap[quality]) * 0.02)));
+    let newEF = Math.max(
+      1.3,
+      ef + (0.1 - (5 - easeMap[quality]) * (0.08 + (5 - easeMap[quality]) * 0.02))
+    );
     let newInterval = quality === 'Again' ? 1 : interval * newEF;
     if (quality === 'Hard') newInterval *= 0.8;
     if (quality === 'Easy') newInterval *= 1.3;
@@ -90,7 +96,7 @@ export default function Learn() {
       ease_factor: newEF,
       interval: Math.round(newInterval),
       next_review: nextReview,
-      status
+      status,
     });
 
     const nextIndex = currentIndex + 1;
@@ -105,38 +111,29 @@ export default function Learn() {
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-black dark:text-white transition-colors duration-500">
-      <div className="flex flex-col md:flex-row justify-between gap-4 mb-4 items-center">
-        <div>
-          <motion.h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-300">
-            🧠 Learn Arabic Your Way
-          </motion.h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Toggle between Quranic verses and Everyday essentials.
-          </p>
-        </div>
+      <div className="text-center mb-4">
+        <h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-300">
+          <span role="img" aria-label="brain">🧠</span> Learn Arabic Your Way
+        </h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Toggle between Quranic verses and Everyday essentials.
+        </p>
+      </div>
 
-        <div className="flex gap-2">
-          {decks.map((deck) => (
-            <button
-              key={deck}
-              onClick={() => setActiveDeck(deck)}
-              className={`px-3 py-1 rounded-full text-sm ${
-                activeDeck === deck
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-              }`}
-            >
-              {deck}
-            </button>
-          ))}
-        </div>
-
-        <button
-          onClick={() => setReverse((r) => !r)}
-          className="text-sm bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-3 py-1 rounded shadow"
-        >
-          {reverse ? '🔁 Arabic → English' : '🔁 English → Arabic'}
-        </button>
+      <div className="flex justify-center gap-3 mb-6">
+        {decks.map((deck) => (
+          <button
+            key={deck}
+            onClick={() => setActiveDeck(deck)}
+            className={`px-4 py-2 rounded-full text-sm transition font-medium ${
+              activeDeck === deck
+                ? 'bg-emerald-600 text-white shadow'
+                : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
+            }`}
+          >
+            {deck}
+          </button>
+        ))}
       </div>
 
       <div className="flex justify-center gap-3 mb-6">
@@ -155,6 +152,15 @@ export default function Learn() {
         ))}
       </div>
 
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={() => setReverse((r) => !r)}
+          className="text-sm bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-3 py-1 rounded shadow"
+        >
+          {reverse ? '🔁 Arabic → English' : '🔁 English → Arabic'}
+        </button>
+      </div>
+
       {loading ? (
         <p className="text-center text-gray-500">Loading...</p>
       ) : !current ? (
@@ -163,17 +169,17 @@ export default function Learn() {
         </p>
       ) : (
         <motion.div
-          className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border dark:border-gray-700"
+          className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border dark:border-gray-700 text-center"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h2 className="text-2xl text-center font-[Scheherazade] mb-2">
+          <h2 className="text-2xl font-[Scheherazade] mb-2">
             {reverse ? current.english : current.arabic}
           </h2>
-          <p className="text-center mb-1 text-gray-600 dark:text-gray-300">
+          <p className="mb-1 text-gray-600 dark:text-gray-300">
             {reverse ? current.arabic : current.english}
           </p>
-          <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Ayah: {current.ayah_ref} • Root: {current.root}
           </p>
 
