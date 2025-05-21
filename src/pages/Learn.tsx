@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { motion } from 'framer-motion';
-
+// 
 interface Word {
   id: string;
   arabic: string;
