@@ -1,4 +1,3 @@
-// ✅ UPDATED Learn.tsx with Deck Toggle
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -107,9 +106,15 @@ export default function Learn() {
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-black dark:text-white transition-colors duration-500">
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-4 items-center">
-        <motion.h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-300">
-          📚 Learn Quranic Arabic
-        </motion.h1>
+        <div>
+          <motion.h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-300">
+            🧠 Learn Arabic Your Way
+          </motion.h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Toggle between Quranic verses and Everyday essentials.
+          </p>
+        </div>
+
         <div className="flex gap-2">
           {decks.map((deck) => (
             <button
@@ -125,6 +130,7 @@ export default function Learn() {
             </button>
           ))}
         </div>
+
         <button
           onClick={() => setReverse((r) => !r)}
           className="text-sm bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-3 py-1 rounded shadow"
