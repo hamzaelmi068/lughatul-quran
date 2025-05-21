@@ -1,3 +1,4 @@
+// ✅ UPDATED Learn.tsx with Deck Toggle
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -10,6 +11,7 @@ interface Word {
   root: string;
   ayah_ref: string;
   level: string;
+  tag: string;
 }
 
 interface UserWord {
@@ -21,6 +23,7 @@ interface UserWord {
 }
 
 const tabs = ['beginner', 'intermediate', 'advanced'];
+const decks = ['Quranic', 'Everyday', 'All'];
 const easeMap = {
   Again: 1,
   Hard: 3,
@@ -35,12 +38,13 @@ export default function Learn() {
   const [queue, setQueue] = useState<Word[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('beginner');
+  const [activeDeck, setActiveDeck] = useState('Quranic');
   const [loading, setLoading] = useState(true);
   const [reverse, setReverse] = useState(false);
 
   useEffect(() => {
     if (user) fetchData();
-  }, [user, activeTab]);
+  }, [user, activeTab, activeDeck]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -53,8 +57,10 @@ export default function Learn() {
     const now = new Date();
     const filtered = (wordList || []).filter((w) => {
       const uw = (userData || []).find((u) => u.word_id === w.id);
+      const matchesDeck = activeDeck === 'All' || w.tag === activeDeck;
       return (
         w.level === activeTab &&
+        matchesDeck &&
         (!uw || !uw.next_review || new Date(uw.next_review) <= now)
       );
     });
@@ -100,10 +106,25 @@ export default function Learn() {
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-black dark:text-white transition-colors duration-500">
-      <div className="flex justify-between mb-4 items-center">
+      <div className="flex flex-col md:flex-row justify-between gap-4 mb-4 items-center">
         <motion.h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-300">
           📚 Learn Quranic Arabic
         </motion.h1>
+        <div className="flex gap-2">
+          {decks.map((deck) => (
+            <button
+              key={deck}
+              onClick={() => setActiveDeck(deck)}
+              className={`px-3 py-1 rounded-full text-sm ${
+                activeDeck === deck
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+              }`}
+            >
+              {deck}
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => setReverse((r) => !r)}
           className="text-sm bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-3 py-1 rounded shadow"
