@@ -1,5 +1,6 @@
+// ✅ UPDATED MyVocabulary.tsx with Deck Filtering
 import React, { useState, useEffect } from 'react';
-import { Search, BookOpen, Award, Filter } from 'lucide-react';
+import { Search, BookOpen, Award } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import type { Database } from '../lib/database.types';
@@ -10,11 +11,13 @@ type UserWord = Database['public']['Tables']['user_words']['Row'];
 type WordWithStatus = Word & Pick<UserWord, 'status'>;
 
 type Level = 'all' | 'beginner' | 'intermediate' | 'advanced';
+type Deck = 'all' | 'Quranic' | 'Everyday';
 
 export default function MyVocabulary() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<Level>('all');
+  const [selectedDeck, setSelectedDeck] = useState<Deck>('all');
   const [expandedWord, setExpandedWord] = useState<string | null>(null);
   const [words, setWords] = useState<WordWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,22 +25,16 @@ export default function MyVocabulary() {
   useEffect(() => {
     async function fetchWords() {
       if (!user) return;
-
       try {
         setLoading(true);
-        
-        // Fetch all words and user's progress in parallel
         const [wordsResponse, userWordsResponse] = await Promise.all([
           supabase.from('words').select('*'),
-          supabase.from('user_words')
-            .select('*')
-            .eq('user_id', user.id)
+          supabase.from('user_words').select('*').eq('user_id', user.id)
         ]);
 
         if (wordsResponse.error) throw wordsResponse.error;
         if (userWordsResponse.error) throw userWordsResponse.error;
 
-        // Combine words with user progress
         const wordsWithStatus = wordsResponse.data.map(word => {
           const userWord = userWordsResponse.data.find(uw => uw.word_id === word.id);
           return {
@@ -53,20 +50,18 @@ export default function MyVocabulary() {
         setLoading(false);
       }
     }
-
     fetchWords();
   }, [user]);
 
   const filtered = words.filter((w) => {
     const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = 
+    const matchesSearch =
       w.arabic?.toLowerCase().includes(searchLower) ||
       w.english?.toLowerCase().includes(searchLower) ||
       w.root?.toLowerCase().includes(searchLower);
-    
     const matchesLevel = selectedLevel === 'all' || w.level === selectedLevel;
-    
-    return matchesSearch && matchesLevel;
+    const matchesDeck = selectedDeck === 'all' || w.tag === selectedDeck;
+    return matchesSearch && matchesLevel && matchesDeck;
   });
 
   const stats = {
@@ -112,7 +107,7 @@ export default function MyVocabulary() {
           </div>
         </div>
 
-        <div className="flex gap-4 mb-4">
+        <div className="flex gap-4 mb-4 flex-col sm:flex-row">
           <div className="relative flex-1">
             <Search className="absolute top-2.5 left-3 text-gray-400" size={18} />
             <input
@@ -122,7 +117,7 @@ export default function MyVocabulary() {
               className="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
-          
+
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value as Level)}
@@ -132,6 +127,16 @@ export default function MyVocabulary() {
             <option value="beginner">Beginner</option>
             <option value="intermediate">Intermediate</option>
             <option value="advanced">Advanced</option>
+          </select>
+
+          <select
+            value={selectedDeck}
+            onChange={(e) => setSelectedDeck(e.target.value as Deck)}
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="all">All Decks</option>
+            <option value="Quranic">Quranic</option>
+            <option value="Everyday">Everyday</option>
           </select>
         </div>
 
