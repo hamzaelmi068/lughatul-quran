@@ -1,15 +1,13 @@
-// ✅ UPDATED MyVocabulary.tsx with Deck Filtering
 import React, { useState, useEffect } from 'react';
 import { Search, BookOpen, Award } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import type { Database } from '../lib/database.types';
 
+// Types
 type Word = Database['public']['Tables']['words']['Row'];
 type UserWord = Database['public']['Tables']['user_words']['Row'];
-
-type WordWithStatus = Word & Pick<UserWord, 'status'>;
-
+type WordWithStatus = Word & { status: string };
 type Level = 'all' | 'beginner' | 'intermediate' | 'advanced';
 type Deck = 'all' | 'Quranic' | 'Everyday';
 
@@ -35,7 +33,7 @@ export default function MyVocabulary() {
         if (wordsResponse.error) throw wordsResponse.error;
         if (userWordsResponse.error) throw userWordsResponse.error;
 
-        const wordsWithStatus = wordsResponse.data.map(word => {
+        const wordsWithStatus: WordWithStatus[] = (wordsResponse.data || []).map(word => {
           const userWord = userWordsResponse.data.find(uw => uw.word_id === word.id);
           return {
             ...word,
@@ -110,7 +108,7 @@ export default function MyVocabulary() {
           </div>
         </div>
 
-        <div className="flex gap-4 mb-4 flex-col sm:flex-row">
+        <div className="flex gap-4 mb-4">
           <div className="relative flex-1">
             <Search className="absolute top-2.5 left-3 text-gray-400" size={18} />
             <input
@@ -143,7 +141,64 @@ export default function MyVocabulary() {
           </select>
         </div>
 
-        {/* ... rest of table rendering remains unchanged */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-x-auto shadow">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Arabic</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">English</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Root</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Level</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {filtered.map((word) => (
+                <React.Fragment key={word.id}>
+                  <tr
+                    onClick={() => setExpandedWord(expandedWord === word.id ? null : word.id)}
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                  >
+                    <td className="px-6 py-4 text-xl font-[Scheherazade]">{word.arabic}</td>
+                    <td className="px-6 py-4">{word.english}</td>
+                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{word.root}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        word.level === 'beginner'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                          : word.level === 'intermediate'
+                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200'
+                      }`}>
+                        {word.level}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        word.status === 'mastered'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
+                          : word.status === 'learning'
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200'
+                          : 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200'
+                      }`}>
+                        {word.status}
+                      </span>
+                    </td>
+                  </tr>
+                  {expandedWord === word.id && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-4 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                        <p><strong>Surah:</strong> {word.surah}</p>
+                        <p><strong>Ayah:</strong> {word.ayah}</p>
+                        <p><strong>Ayah Number:</strong> {word.ayah_number}</p>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
