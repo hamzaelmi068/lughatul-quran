@@ -13,7 +13,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="w-full py-4 px-6 bg-white/90 dark:bg-black/70 backdrop-blur-md shadow-md border-b border-gray-200 dark:border-gray-700 fixed top-0 z-50">
+    <nav className="w-full px-4 py-3 sm:py-4 bg-white/90 dark:bg-black/70 backdrop-blur-md shadow-md border-b border-gray-200 dark:border-gray-700 fixed top-0 z-50">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
         <h1 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">LughatulQuran</h1>
         <div className="flex flex-wrap gap-2 sm:gap-4 text-sm font-medium items-center">
