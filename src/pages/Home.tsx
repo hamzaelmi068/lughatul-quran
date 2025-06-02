@@ -28,8 +28,8 @@ const Home = () => {
   ];
 
   return (
-    <main className="min-h-screen w-full px-6 pt-32 pb-20 bg-gradient-to-br from-[#0f1c14] via-[#111c1b] to-black text-white transition-all duration-500">
-      <div className="text-center mb-12">
+    <main className="min-h-screen w-full px-6 pb-20 bg-gradient-to-br from-[#0f1c14] via-[#111c1b] to-black text-white transition-all duration-500">
+      <div className="text-center mb-12 pt-24">
         <motion.h1
           className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-wide text-emerald-300"
           initial={{ opacity: 0, y: -40 }}
@@ -87,4 +87,3 @@ const Home = () => {
 };
 
 export default Home;
-

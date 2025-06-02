@@ -17,7 +17,7 @@ function Profile() {
   ];
 
   return (
-    <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
+    <div className="min-h-screen px-6 pb-12 pt-24 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8 flex flex-col sm:flex-row justify-between items-center">
@@ -27,7 +27,7 @@ function Profile() {
               <h2 className="text-2xl font-bold">{user?.email || 'Guest User'}</h2>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
                 {user
-                  ? 'Welcome back! Here’s your Quranic Arabic progress so far:'
+                  ? 'Welcome back! Here's your Quranic Arabic progress so far:'
                   : 'You are logged in as a guest. Progress is not saved permanently.'}
               </p>
             </div>
@@ -71,4 +71,3 @@ function Profile() {
 }
 
 export default Profile;
-
