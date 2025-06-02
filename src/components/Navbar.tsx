@@ -35,11 +35,8 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-      {/* Padding buffer below navbar */}
-      <div className="h-16 sm:h-20"></div>
     </div>
   );
 };
 
 export default Navbar;
-

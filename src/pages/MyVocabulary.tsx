@@ -70,14 +70,14 @@ export default function MyVocabulary() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 flex items-center justify-center bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black">
+      <div className="min-h-screen pt-28 sm:pt-32 flex items-center justify-center bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen px-6 pb-12 pt-24 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
+    <div className="min-h-screen px-6 pb-12 pt-28 sm:pt-32 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-2 text-emerald-700 dark:text-emerald-300">🧠 Learn Arabic Vocabulary</h1>
         <p className="mb-6 text-sm text-gray-700 dark:text-gray-400">

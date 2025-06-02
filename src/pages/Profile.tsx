@@ -13,11 +13,11 @@ function Profile() {
   const stats = [
     { label: 'Words Learned', value: learned, icon: BookOpen },
     { label: 'Words Mastered', value: mastered, icon: Award },
-    { label: 'Current Streak', value: 0, icon: Flame } // Replace 0 with actual logic if needed
+    { label: 'Current Streak', value: 0, icon: Flame }
   ];
 
   return (
-    <div className="min-h-screen px-6 pb-12 pt-24 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
+    <div className="min-h-screen px-6 pb-12 pt-28 sm:pt-32 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8 flex flex-col sm:flex-row justify-between items-center">

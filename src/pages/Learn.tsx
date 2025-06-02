@@ -110,7 +110,7 @@ export default function Learn({}: Props) {
   const current = queue[currentIndex];
 
   return (
-    <div className="min-h-screen px-6 pb-12 pt-24 bg-[#fdfaf3] text-gray-900 dark:bg-black dark:text-white transition-colors duration-500">
+    <div className="min-h-screen px-6 pb-12 pt-28 sm:pt-32 bg-[#fdfaf3] text-gray-900 dark:bg-black dark:text-white transition-colors duration-500">
       <div className="text-center mb-4">
         <h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-300">
           <span role="img" aria-label="brain">🧠</span> Learn Arabic Your Way
