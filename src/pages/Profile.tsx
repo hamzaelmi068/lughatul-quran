@@ -27,7 +27,7 @@ function Profile() {
               <h2 className="text-2xl font-bold">{user?.email || 'Guest User'}</h2>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
                 {user
-                  ? 'Welcome back! Here's your Quranic Arabic progress so far:'
+                  ? 'Welcome back! Here\'s your Quranic Arabic progress so far:'
                   : 'You are logged in as a guest. Progress is not saved permanently.'}
               </p>
             </div>
