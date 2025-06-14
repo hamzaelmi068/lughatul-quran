@@ -6,7 +6,7 @@ import { Book } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function Auth() {
-  const { signIn, signUp, signInAnonymously } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -47,28 +47,6 @@ export default function Auth() {
     setError(null);
   };
 
-  const handleGuestLogin = async () => {
-    try {
-      const { data: { user }, error } = await supabase.auth.signUp({
-        email: `guest_${Date.now()}@temporary.com`,
-        password: `guest${Date.now()}`,
-      });
-      
-      if (error) throw error;
-      
-      // Initialize words for guest user
-      if (user) {
-        await supabase.rpc('initialize_user_words', {
-          new_user_id: user.id
-        });
-      }
-      
-      navigate('/');
-    } catch (err: any) {
-      setError('Failed to sign in as guest');
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <motion.div 
@@ -107,14 +85,6 @@ export default function Auth() {
             {isLogin ? 'Sign In' : 'Sign Up'}
           </button>
         </form>
-        <div className="text-center mt-4">
-          <button 
-            onClick={handleGuestLogin} 
-            className="text-sm text-emerald-600 hover:underline"
-          >
-            Continue as Guest
-          </button>
-        </div>
         <p className="mt-6 text-sm text-gray-700 dark:text-gray-300 text-center">
           {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
           <button onClick={switchMode} className="text-emerald-600 hover:underline font-semibold">
