@@ -70,59 +70,59 @@ export default function MyVocabulary() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-28 sm:pt-32 flex items-center justify-center bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black">
+      <div className="min-h-screen pt-24 sm:pt-32 flex items-center justify-center bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen px-6 pb-12 pt-28 sm:pt-32 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
+    <div className="min-h-screen px-4 sm:px-6 pb-12 pt-24 sm:pt-32 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2 text-emerald-700 dark:text-emerald-300">🧠 Learn Arabic Vocabulary</h1>
-        <p className="mb-6 text-sm text-gray-700 dark:text-gray-400">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-emerald-700 dark:text-emerald-300">🧠 Learn Arabic Vocabulary</h1>
+        <p className="mb-6 text-xs sm:text-sm text-gray-700 dark:text-gray-400">
           Choose between <strong>Quranic</strong> or <strong>Everyday</strong> decks to build your Arabic understanding.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
             <div className="flex justify-between">
-              <span>Total Words</span>
+              <span className="text-sm sm:text-base">Total Words</span>
               <BookOpen className="text-emerald-500" size={18} />
             </div>
-            <p className="text-2xl font-bold mt-2">{stats.total}</p>
+            <p className="text-xl sm:text-2xl font-bold mt-2">{stats.total}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
             <div className="flex justify-between">
-              <span>Learning</span>
+              <span className="text-sm sm:text-base">Learning</span>
               <BookOpen className="text-amber-500" size={18} />
             </div>
-            <p className="text-2xl font-bold mt-2">{stats.learning}</p>
+            <p className="text-xl sm:text-2xl font-bold mt-2">{stats.learning}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
             <div className="flex justify-between">
-              <span>Mastered</span>
+              <span className="text-sm sm:text-base">Mastered</span>
               <Award className="text-green-500" size={18} />
             </div>
-            <p className="text-2xl font-bold mt-2">{stats.mastered}</p>
+            <p className="text-xl sm:text-2xl font-bold mt-2">{stats.mastered}</p>
           </div>
         </div>
 
-        <div className="flex gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="relative flex-1">
             <Search className="absolute top-2.5 left-3 text-gray-400" size={18} />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by Arabic, English, or Root..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
             />
           </div>
 
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value as Level)}
-            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
           >
             <option value="all">All Levels</option>
             <option value="beginner">Beginner</option>
@@ -133,7 +133,7 @@ export default function MyVocabulary() {
           <select
             value={selectedDeck}
             onChange={(e) => setSelectedDeck(e.target.value as Deck)}
-            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
           >
             <option value="all">All Decks</option>
             <option value="Quranic">Quranic</option>
@@ -145,11 +145,11 @@ export default function MyVocabulary() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Arabic</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">English</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Root</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Level</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Arabic</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">English</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 hidden sm:table-cell">Root</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 hidden sm:table-cell">Level</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -159,10 +159,10 @@ export default function MyVocabulary() {
                     onClick={() => setExpandedWord(expandedWord === word.id ? null : word.id)}
                     className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                   >
-                    <td className="px-6 py-4 text-xl font-[Scheherazade]">{word.arabic}</td>
-                    <td className="px-6 py-4">{word.english}</td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{word.root}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-4 text-lg sm:text-xl font-[Scheherazade]">{word.arabic}</td>
+                    <td className="px-3 sm:px-6 py-4 text-sm sm:text-base">{word.english}</td>
+                    <td className="px-3 sm:px-6 py-4 text-gray-500 dark:text-gray-400 text-sm hidden sm:table-cell">{word.root}</td>
+                    <td className="px-3 sm:px-6 py-4 hidden sm:table-cell">
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         word.level === 'beginner'
                           ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
@@ -173,7 +173,7 @@ export default function MyVocabulary() {
                         {word.level}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         word.status === 'mastered'
                           ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
@@ -187,10 +187,14 @@ export default function MyVocabulary() {
                   </tr>
                   {expandedWord === word.id && (
                     <tr>
-                      <td colSpan={5} className="px-6 py-4 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
-                        <p><strong>Surah:</strong> {word.surah}</p>
-                        <p><strong>Ayah:</strong> {word.ayah}</p>
-                        <p><strong>Ayah Number:</strong> {word.ayah_number}</p>
+                      <td colSpan={5} className="px-3 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <p><strong>Root:</strong> {word.root}</p>
+                          <p><strong>Level:</strong> {word.level}</p>
+                          <p><strong>Surah:</strong> {word.surah}</p>
+                          <p><strong>Ayah:</strong> {word.ayah}</p>
+                          <p className="sm:col-span-2"><strong>Ayah Number:</strong> {word.ayah_number}</p>
+                        </div>
                       </td>
                     </tr>
                   )}

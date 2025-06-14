@@ -110,22 +110,22 @@ export default function Learn({}: Props) {
   const current = queue[currentIndex];
 
   return (
-    <div className="min-h-screen px-6 pb-12 pt-28 sm:pt-32 bg-[#fdfaf3] text-gray-900 dark:bg-black dark:text-white transition-colors duration-500">
+    <div className="min-h-screen px-4 sm:px-6 pb-12 pt-24 sm:pt-32 bg-[#fdfaf3] text-gray-900 dark:bg-black dark:text-white transition-colors duration-500">
       <div className="text-center mb-4">
-        <h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-300">
+        <h1 className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-300">
           <span role="img" aria-label="brain">🧠</span> Learn Arabic Your Way
         </h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 px-4">
           Toggle between Quranic verses and Everyday essentials.
         </p>
       </div>
 
-      <div className="flex justify-center gap-3 mb-6">
+      <div className="flex justify-center gap-2 sm:gap-3 mb-6 px-4">
         {decks.map((deck) => (
           <button
             key={deck}
             onClick={() => setActiveDeck(deck)}
-            className={`px-4 py-2 rounded-full text-sm transition font-medium ${
+            className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition font-medium ${
               activeDeck === deck
                 ? 'bg-emerald-600 text-white shadow'
                 : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
@@ -136,12 +136,12 @@ export default function Learn({}: Props) {
         ))}
       </div>
 
-      <div className="flex justify-center gap-3 mb-6">
+      <div className="flex justify-center gap-2 sm:gap-3 mb-6 px-4">
         {tabs.map((level) => (
           <button
             key={level}
             onClick={() => setActiveTab(level)}
-            className={`px-4 py-2 rounded-full border text-sm transition ${
+            className={`px-3 sm:px-4 py-2 rounded-full border text-xs sm:text-sm transition ${
               activeTab === level
                 ? 'bg-emerald-600 text-white shadow'
                 : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
@@ -152,10 +152,10 @@ export default function Learn({}: Props) {
         ))}
       </div>
 
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center mb-4 px-4">
         <button
           onClick={() => setReverse((r) => !r)}
-          className="text-sm bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-3 py-1 rounded shadow"
+          className="text-xs sm:text-sm bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-3 py-1 rounded shadow"
         >
           {reverse ? '🔁 Arabic → English' : '🔁 English → Arabic'}
         </button>
@@ -164,31 +164,31 @@ export default function Learn({}: Props) {
       {loading ? (
         <p className="text-center text-gray-500">Loading...</p>
       ) : !current ? (
-        <p className="text-center text-amber-600 dark:text-amber-400">
+        <p className="text-center text-amber-600 dark:text-amber-400 px-4">
           🎉 All words reviewed for this level!
         </p>
       ) : (
         <motion.div
-          className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border dark:border-gray-700 text-center"
+          className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border dark:border-gray-700 text-center mx-4"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h2 className="text-2xl font-[Scheherazade] mb-2">
+          <h2 className="text-xl sm:text-2xl font-[Scheherazade] mb-2">
             {reverse ? current.english : current.arabic}
           </h2>
-          <p className="mb-1 text-gray-600 dark:text-gray-300">
+          <p className="mb-1 text-gray-600 dark:text-gray-300 text-sm sm:text-base">
             {reverse ? current.arabic : current.english}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             Ayah: {current.ayah_ref} • Root: {current.root}
           </p>
 
-          <div className="flex justify-between gap-2 mt-6">
+          <div className="flex justify-between gap-1 sm:gap-2 mt-6">
             {(['Again', 'Hard', 'Good', 'Easy'] as const).map((label) => (
               <button
                 key={label}
                 onClick={() => handleReview(current, label)}
-                className="flex-1 text-sm py-2 rounded font-semibold bg-emerald-100 dark:bg-emerald-800 hover:bg-emerald-200 dark:hover:bg-emerald-600 text-emerald-900 dark:text-white"
+                className="flex-1 text-xs sm:text-sm py-2 rounded font-semibold bg-emerald-100 dark:bg-emerald-800 hover:bg-emerald-200 dark:hover:bg-emerald-600 text-emerald-900 dark:text-white"
               >
                 {label}
               </button>
