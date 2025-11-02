@@ -1,21 +1,24 @@
-# 📖 LughatulQuran — Learn Quranic Arabic Smarter
+# LughatulQuran — Smarter Quranic Arabic Learning
 
-LughatulQuran is a Quranic Arabic learning web app inspired by the simplicity of Anki and the precision of spaced repetition (SRS). It helps users learn Quranic vocabulary efficiently, while tracking their mastery and daily review streaks.
+**LughatulQuran** is a web app designed to make learning Quranic Arabic vocabulary easier and more consistent.  
+It draws inspiration from tools like **Anki**, using spaced repetition to help you retain words through short daily reviews in a clean, focused interface.
 
 🚀 Built by [Hamza](https://github.com/hamzaelmi068) as a personal side project to fuse faith + full-stack learning into something impactful.
+This project is a personal effort to make learning smoother and more intentional.
 
 ---
 
-## 🌟 Features
+## Features
 
-- 📚 **Learn Mode** — Study vocabulary by difficulty level (`beginner`, `intermediate`, `advanced`)
-- 🧠 **Smart Review System** — Powered by Spaced Repetition (SRS) with `Again`, `Hard`, `Good`, `Easy` feedback buttons
-- 🔁 **Review Queue** — Prioritized review cards based on `ease_factor` and `interval`
-- 💡 **Reverse Cards** — Switch from Arabic → English to English → Arabic
-- 🏷️ **Word Tags & Decks** — Organize by themes like *Belief*, *Afterlife*, or *Character*
-- 🌘 **Dark Mode** — Seamless UI in both light and dark themes
-- 🔐 **User Authentication** — Track personal word progress and streaks
-- 🔊 **(Coming Soon)** — Audio playback for each word using Quran recitations
+- **Learn Mode** — Vocabulary organized by level (beginner, intermediate, advanced)
+- **Spaced Repetition Review** — Rate your recall (“Again,” “Hard,” “Good,” “Easy”) to guide review timing
+- **Review Queue** — Cards automatically repeat based on performance
+- **Reverse Cards** — Practice in both Arabic → English and English → Arabic
+- **Tags & Decks** — Group words by themes (Belief, Afterlife, Character, etc.)
+- **Dark Mode** — Works comfortably day or night
+- **Personal Accounts** — Log in to save progress and streaks
+- **Audio (Coming Soon)** — Hear words directly from Quranic recitations
+
 
 ---
 
@@ -66,13 +69,13 @@ Make sure to configure your `.env` with your Supabase keys.
 
 ---
 
-## 📈 Deployment
+## Deployment
 
 Deployed on **[Vercel](https://lughatul-quran.vercel.app)** with Supabase as backend. Continuous deployment is set up via GitHub → Vercel integration.
 
 ---
 
-## 🙏 Acknowledgements + Resources
+## Acknowledgements + Resources
 
 - The Noble Quran — for the inspiration and purpose
 - Anki — for the spaced repetition learning model
@@ -81,7 +84,7 @@ Deployed on **[Vercel](https://lughatul-quran.vercel.app)** with Supabase as bac
 
 ---
 
-## 💬 Contact
+## Contact
 
 Built with sincerity and love by [Hamza Elmi](https://github.com/hamzaelmi068).  
 Feel free to reach out with feedback, suggestions, or a collab idea ✨
