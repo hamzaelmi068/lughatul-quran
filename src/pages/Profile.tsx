@@ -82,7 +82,7 @@ function Profile() {
       value: streakCount, 
       icon: Flame,
       color: 'orange',
-      description: 'Consecutive days of learning'
+      description: 'Consecutive days of learning (keep it up!)'
     },
   ];
 
