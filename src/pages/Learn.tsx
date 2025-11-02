@@ -10,6 +10,7 @@ interface Word {
   root: string;
   ayah_ref: string;
   level: string;
+  tag?: string;
 }
 
 interface UserWord {
@@ -21,25 +22,32 @@ interface UserWord {
 }
 
 const tabs = ['beginner', 'intermediate', 'advanced'];
+const decks = ['Quranic', 'Everyday', 'all'] as const;
 const easeMap = {
   Again: 1,
   Hard: 3,
   Good: 4,
-  Easy: 5
+  Easy: 5,
 } as const;
 
-export default function Learn() {
+type DeckType = typeof decks[number];
+
+type Props = {};
+
+export default function Learn({}: Props) {
   const { user } = useAuth();
   const [words, setWords] = useState<Word[]>([]);
   const [userWords, setUserWords] = useState<UserWord[]>([]);
+  const [queue, setQueue] = useState<Word[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('beginner');
+  const [activeDeck, setActiveDeck] = useState<DeckType>('Quranic');
   const [loading, setLoading] = useState(true);
   const [reverse, setReverse] = useState(false);
-  const [currentWord, setCurrentWord] = useState<Word | null>(null);
 
   useEffect(() => {
     if (user) fetchData();
-  }, [user, activeTab]);
+  }, [user, activeTab, activeDeck]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -47,127 +55,140 @@ export default function Learn() {
     const { data: userData } = await supabase
       .from('user_words')
       .select('*')
-      .eq('user_id', user?.id);
+      .eq('user_id', user.id);
+
+    const now = new Date();
+    const filtered = (wordList || []).filter((w) => {
+      const uw = (userData || []).find((u) => u.word_id === w.id);
+      return (
+        w.level === activeTab &&
+        (activeDeck === 'all' || w.tag === activeDeck) &&
+        (!uw || !uw.next_review || new Date(uw.next_review) <= now)
+      );
+    });
 
     setWords(wordList || []);
     setUserWords(userData || []);
-    setCurrentWord(getNextWord(wordList || [], userData || []));
+    setQueue(filtered);
+    setCurrentIndex(0);
     setLoading(false);
-  };
-
-  const getNextWord = (wordList = words, userData = userWords) => {
-    const now = new Date();
-    return wordList.find((w) => {
-      const uw = userData.find((uw) => uw.word_id === w.id);
-      return (
-        w.level === activeTab &&
-        (!uw || new Date(uw.next_review || 0) <= now)
-      );
-    }) || null;
   };
 
   const handleReview = async (word: Word, quality: keyof typeof easeMap) => {
     const existing = userWords.find((uw) => uw.word_id === word.id);
     const ef = existing?.ease_factor ?? 2.5;
-    const interval = existing?.interval ?? 0;
+    const interval = existing?.interval ?? 1;
 
-    let newEF = ef + (0.1 - (5 - easeMap[quality]) * (0.08 + (5 - easeMap[quality]) * 0.02));
-    newEF = Math.max(1.3, newEF);
+    let newEF = Math.max(
+      1.3,
+      ef + (0.1 - (5 - easeMap[quality]) * (0.08 + (5 - easeMap[quality]) * 0.02))
+    );
     let newInterval = quality === 'Again' ? 1 : interval * newEF;
-    if (quality === 'Good') newInterval = Math.max(1, newInterval);
-    if (quality === 'Hard') newInterval = Math.max(1, newInterval * 0.8);
+    if (quality === 'Hard') newInterval *= 0.8;
     if (quality === 'Easy') newInterval *= 1.3;
 
     const nextReview = new Date(Date.now() + newInterval * 86400000).toISOString();
     const status = quality === 'Easy' ? 'mastered' : 'learning';
 
-    const upsertResult = await supabase
-      .from('user_words')
-      .upsert({
-        user_id: user!.id,
-        word_id: word.id,
-        status,
-        ease_factor: newEF,
-        interval: Math.round(newInterval),
-        next_review: nextReview
-      }, { onConflict: ['user_id', 'word_id'] });
+    await supabase.from('user_words').upsert({
+      user_id: user!.id,
+      word_id: word.id,
+      ease_factor: newEF,
+      interval: Math.round(newInterval),
+      next_review: nextReview,
+      status,
+    });
 
-    if (upsertResult.error) {
-      console.error('Error upserting user_word:', upsertResult.error);
-      return;
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < queue.length) {
+      setCurrentIndex(nextIndex);
+    } else {
+      await fetchData();
     }
-
-    const { data: updatedUserWords } = await supabase
-      .from('user_words')
-      .select('*')
-      .eq('user_id', user!.id);
-
-    setUserWords(updatedUserWords || []);
-    setCurrentWord(getNextWord(words, updatedUserWords || []));
   };
 
+  const current = queue[currentIndex];
+
   return (
-    <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] text-gray-900 dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black dark:text-white transition-colors duration-500">
-      <div className="flex justify-between items-center mb-4">
-        <motion.h1
-          className="text-3xl font-bold text-emerald-700 dark:text-emerald-300"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          📚 Learn Quranic Arabic
-        </motion.h1>
+    <div className="min-h-screen px-4 sm:px-6 pb-12 pt-24 sm:pt-32 bg-[#fdfaf3] text-gray-900 dark:bg-black dark:text-white transition-colors duration-500">
+      <div className="text-center mb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-300">
+          <span role="img" aria-label="brain">🧠</span> Learn Arabic Your Way
+        </h1>
+        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 px-4">
+          Toggle between Quranic verses and Everyday essentials.
+        </p>
+      </div>
+
+      <div className="flex justify-center gap-2 sm:gap-3 mb-6 px-4">
+        {decks.map((deck) => (
+          <button
+            key={deck}
+            onClick={() => setActiveDeck(deck)}
+            className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm transition font-medium ${
+              activeDeck === deck
+                ? 'bg-emerald-600 text-white shadow'
+                : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
+            }`}
+          >
+            {deck}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex justify-center gap-2 sm:gap-3 mb-6 px-4">
+        {tabs.map((level) => (
+          <button
+            key={level}
+            onClick={() => setActiveTab(level)}
+            className={`px-3 sm:px-4 py-2 rounded-full border text-xs sm:text-sm transition ${
+              activeTab === level
+                ? 'bg-emerald-600 text-white shadow'
+                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
+            }`}
+          >
+            {level[0].toUpperCase() + level.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex justify-center mb-4 px-4">
         <button
           onClick={() => setReverse((r) => !r)}
-          className="text-sm bg-amber-100 dark:bg-amber-900 dark:text-amber-300 px-3 py-1 rounded shadow hover:opacity-90"
+          className="text-xs sm:text-sm bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-3 py-1 rounded shadow"
         >
           {reverse ? '🔁 Arabic → English' : '🔁 English → Arabic'}
         </button>
       </div>
 
-      <div className="flex justify-center gap-3 mb-8">
-        {tabs.map((level) => (
-          <button
-            key={level}
-            onClick={() => setActiveTab(level)}
-            className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
-              activeTab === level
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'bg-white dark:bg-white/10 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
-          >
-            {level.charAt(0).toUpperCase() + level.slice(1)}
-          </button>
-        ))}
-      </div>
-
       {loading ? (
-        <p className="text-center text-gray-400">Loading...</p>
-      ) : !currentWord ? (
-        <p className="text-center text-amber-600 dark:text-amber-300">
-          🎉 You’ve learned all available words at this level!
+        <p className="text-center text-gray-500">Loading...</p>
+      ) : !current ? (
+        <p className="text-center text-amber-600 dark:text-amber-400 px-4">
+          🎉 All words reviewed for this level!
         </p>
       ) : (
         <motion.div
-          className="max-w-xl mx-auto p-6 bg-white/90 dark:bg-white/5 border dark:border-gray-700 rounded-xl shadow-lg"
-          initial={{ opacity: 0, y: 20 }}
+          className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border dark:border-gray-700 text-center mx-4"
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h2 className="text-2xl text-center font-[Scheherazade] mb-2">
-            {reverse ? currentWord.english : currentWord.arabic}
+          <h2 className="text-xl sm:text-2xl font-[Scheherazade] mb-2">
+            {reverse ? current.english : current.arabic}
           </h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 mb-1">
-            {reverse ? currentWord.arabic : currentWord.english}
+          <p className="mb-1 text-gray-600 dark:text-gray-300 text-sm sm:text-base">
+            {reverse ? current.arabic : current.english}
           </p>
-          <p className="text-center text-xs text-gray-500 dark:text-gray-400 mb-4">
-            Ayah: {currentWord.ayah_ref} • Root: {currentWord.root}
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Ayah: {current.ayah_ref} • Root: {current.root}
           </p>
 
-          <div className="flex justify-between gap-2 mt-4">
+          <div className="flex justify-between gap-1 sm:gap-2 mt-6">
             {(['Again', 'Hard', 'Good', 'Easy'] as const).map((label) => (
               <button
                 key={label}
-                onClick={() => handleReview(currentWord, label)}
-                className="flex-1 text-sm py-2 rounded font-semibold bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-white dark:hover:bg-emerald-600"
+                onClick={() => handleReview(current, label)}
+                className="flex-1 text-xs sm:text-sm py-2 rounded font-semibold bg-emerald-100 dark:bg-emerald-800 hover:bg-emerald-200 dark:hover:bg-emerald-600 text-emerald-900 dark:text-white"
               >
                 {label}
               </button>

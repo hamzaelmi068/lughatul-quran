@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { Book } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 export default function Auth() {
-  const { signIn, signUp, signInAnonymously } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -19,9 +20,23 @@ export default function Auth() {
       if (isLogin) {
         await signIn(email, password);
       } else {
-        await signUp(email, password);
+        // Sign up and get the new user's ID
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (signUpError) throw signUpError;
+
+        // Initialize words for the new user
+        if (authData.user) {
+          const { error: initError } = await supabase.rpc('initialize_user_words', {
+            new_user_id: authData.user.id
+          });
+          if (initError) throw initError;
+        }
       }
-      navigate('/'); // Redirect to home (or could go to /learn)
+      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     }
@@ -30,15 +45,6 @@ export default function Auth() {
   const switchMode = () => {
     setIsLogin(!isLogin);
     setError(null);
-  };
-
-  const handleGuestLogin = async () => {
-    try {
-      await signInAnonymously();
-      navigate('/');
-    } catch (err: any) {
-      setError('Failed to sign in as guest');
-    }
   };
 
   return (
@@ -79,14 +85,6 @@ export default function Auth() {
             {isLogin ? 'Sign In' : 'Sign Up'}
           </button>
         </form>
-        <div className="text-center mt-4">
-          <button 
-            onClick={handleGuestLogin} 
-            className="text-sm text-emerald-600 hover:underline"
-          >
-            Continue as Guest
-          </button>
-        </div>
         <p className="mt-6 text-sm text-gray-700 dark:text-gray-300 text-center">
           {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
           <button onClick={switchMode} className="text-emerald-600 hover:underline font-semibold">

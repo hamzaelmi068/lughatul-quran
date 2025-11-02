@@ -33,7 +33,7 @@ const Home = () => {
       iconBgClass: 'bg-amber-500/20',
       iconColorClass: 'text-amber-300',
       glowClass: 'bg-amber-500/10',
-      onClick: () => navigate('/review')
+      onClick: () => navigate('/myvocabulary')
     },
     {
       title: 'Track Your Progress',
@@ -156,10 +156,6 @@ const Home = () => {
           {/* Enhanced CTA Button - Bold and prominent */}
           <motion.div
             className="mt-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
             <motion.button
               onClick={() => navigate(user ? '/learn' : '/auth')}
               className="group relative px-8 py-4 sm:px-10 sm:py-5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-lg sm:text-xl shadow-2xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 focus:ring-offset-4 focus:ring-offset-gray-900"
@@ -178,14 +174,14 @@ const Home = () => {
             {/* Secondary action for logged-in users */}
             {user && (
               <motion.button
-                onClick={() => navigate('/review')}
+                onClick={() => navigate('/myvocabulary')}
                 className="mt-4 px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                aria-label="Continue your review session"
+                aria-label="View your vocabulary"
               >
-                Continue Review
+                View My Vocabulary
               </motion.button>
             )}
           </motion.div>
@@ -251,4 +247,3 @@ const Home = () => {
 };
 
 export default Home;
-

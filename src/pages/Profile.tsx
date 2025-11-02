@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, Award, Flame, User as UserIcon, TrendingUp, Star, Trophy, Target } from 'lucide-react';
+import { BookOpen, Award, Flame, User as UserIcon, TrendingUp, Star, Trophy, Target, LogIn, LogOut } from 'lucide-react';
 import { useWords } from '../hooks/useWords';
 import { motion } from 'framer-motion';
 
 function Profile() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { userWords } = useWords();
 
   const learnedCount = userWords.length;
@@ -160,12 +160,33 @@ function Profile() {
                 </p>
               </div>
             </div>
-            {streakCount > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-orange-100 dark:bg-orange-900/30 rounded-full border border-orange-300 dark:border-orange-700">
-                <Flame className="h-5 w-5 text-orange-600 dark:text-orange-400" aria-hidden="true" />
-                <span className="font-bold text-orange-700 dark:text-orange-300">{streakCount} day streak!</span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {streakCount > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-orange-100 dark:bg-orange-900/30 rounded-full border border-orange-300 dark:border-orange-700">
+                  <Flame className="h-5 w-5 text-orange-600 dark:text-orange-400" aria-hidden="true" />
+                  <span className="font-bold text-orange-700 dark:text-orange-300">{streakCount} day streak!</span>
+                </div>
+              )}
+              {user ? (
+                <button
+                  onClick={signOut}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  aria-label="Sign out"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  <span>Log Out</span>
+                </button>
+              ) : (
+                <a
+                  href="/auth"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                  aria-label="Log in"
+                >
+                  <LogIn className="h-4 w-4" aria-hidden="true" />
+                  <span>Log In</span>
+                </a>
+              )}
+            </div>
           </div>
           <p className="text-base text-gray-600 dark:text-gray-300 leading-relaxed">
             {user

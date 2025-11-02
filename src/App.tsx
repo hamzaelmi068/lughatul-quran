@@ -6,7 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 // Page components
 import Home from './pages/Home';
 import Learn from './pages/Learn';
-import Review from './pages/Review';
+import MyVocabulary from './pages/MyVocabulary';
 import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 
@@ -26,10 +26,10 @@ function App() {
             } 
           />
           <Route 
-            path="/review" 
+            path="/myvocabulary" 
             element={
               <ProtectedRoute>
-                <Review />
+                <MyVocabulary />
               </ProtectedRoute>
             } 
           />
@@ -49,14 +49,5 @@ function App() {
     </AuthProvider>
   );
 }
-function MyApp({ Component, pageProps }: AppProps) {
-  return (
-    <>
-      <Navbar />
-      <div className="pt-16"> {/* add top padding so content doesn't hide behind navbar */}
-        <Component {...pageProps} />
-      </div>
-    </>
-  );
-}
+
 export default App;

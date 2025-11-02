@@ -1,7 +1,7 @@
 // src/components/Navbar.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, RotateCcw, User, Menu, X } from 'lucide-react';
+import { Home, BookOpen, BookMarked, User, Menu, X } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
@@ -12,7 +12,7 @@ const Navbar = () => {
   const links = [
     { to: '/', label: 'Home', icon: Home },
     { to: '/learn', label: 'Learn', icon: BookOpen },
-    { to: '/review', label: 'Review', icon: RotateCcw },
+    { to: '/myvocabulary', label: 'My Vocabulary', icon: BookMarked },
     { to: '/profile', label: 'Profile', icon: User }
   ];
 

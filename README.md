@@ -72,11 +72,12 @@ Deployed on **[Vercel](https://lughatul-quran.vercel.app)** with Supabase as bac
 
 ---
 
-## 🙏 Acknowledgements
+## 🙏 Acknowledgements + Resources
 
 - The Noble Quran — for the inspiration and purpose
 - Anki — for the spaced repetition learning model
 - Supabase — for making backend setup simple and powerful
+- https://resources.collins.co.uk/Dictionary/CD%20Resources/Collins_Arabic_3000_words_and_phrases.pdf 
 
 ---
 

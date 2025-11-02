@@ -8,55 +8,68 @@ type Word = Database['public']['Tables']['words']['Row'];
 type UserWord = Database['public']['Tables']['user_words']['Row'];
 
 const Review = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [queue, setQueue] = useState<(Word & UserWord)[]>([]);
+  const [current, setCurrent] = useState<Word & UserWord | null>(null);
 
-const { words, userWords, updateWordProgress, loading, refetch } = useWords(); // ✅ added refetch
+  const { words, userWords, updateWordProgress, loading, refetch } = useWords();
 
-  const now = new Date();
+  useEffect(() => {
+    if (!loading) {
+      const now = new Date();
+      console.log("✅ Now:", now.toISOString());
 
-  const reviewQueue = userWords
-    .filter(w => w.next_review && new Date(w.next_review) <= now)
-    .map(uw => {
-      const word = words.find(w => w.id === uw.word_id);
-      return word ? { ...word, ...uw } : null;
-    })
-    .filter(Boolean) as (Word & UserWord)[];
+      const queue = userWords
+        .filter((w) => {
+          const due = w.next_review && new Date(w.next_review) <= now;
+          if (!due) {
+            console.log("⛔ Skipped:", {
+              word_id: w.word_id,
+              next_review: w.next_review,
+              now: now.toISOString(),
+            });
+          }
+          return due;
+        })
+        .map((uw) => {
+          const word = words.find((w) => w.id === uw.word_id);
+          if (!word) {
+            console.log("⚠️ Word not found for:", uw.word_id);
+          }
+          return word ? { ...word, ...uw } : null;
+        })
+        .filter(Boolean) as (Word & UserWord)[];
 
-  const current = reviewQueue[currentIndex];
+      setQueue(queue);
+      setCurrent(queue[0] ?? null);
+    }
+  }, [loading, words, userWords]);
 
- const handleReview = async (word: Word & UserWord, quality: 0 | 1 | 2 | 3) => {
-  const { easeFactor, interval } = calculateNextReview(
-    quality,
-    word.interval ?? 1,
-    word.ease_factor ?? 2.5
-  );
+  const handleReview = async (quality: 0 | 1 | 2 | 3) => {
+    if (!current) return;
 
-  const nextReview = new Date(Date.now() + interval * 86400000);
-  const status = quality >= 3 ? 'mastered' : 'learning';
+    const { easeFactor, interval, nextReview } = calculateNextReview(
+      quality,
+      current.interval ?? 0,
+      current.ease_factor ?? 2.5
+    );
 
-  await updateWordProgress(word.word_id, {
-    ease_factor: easeFactor,
-    interval,
-    status,
-    next_review: nextReview
-  });
+    await updateWordProgress(current.word_id, {
+      ease_factor: easeFactor,
+      interval,
+      next_review: nextReview.toISOString(),
+      status: quality === 3 ? 'mastered' : 'learning',
+    });
 
-  // ✅ Immediately remove the reviewed word locally from the queue
-  setCurrentIndex(prev => {
-    const next = prev + 1;
-    return next >= reviewQueue.length ? 0 : next;
-  });
+    const nextQueue = queue.slice(1);
+    setQueue(nextQueue);
+    setCurrent(nextQueue[0] ?? null);
+    setStreak((s) => (quality >= 2 ? s + 1 : 0));
 
-  setStreak(q => (quality >= 2 ? q + 1 : 0));
-
-  // ✅ Then fetch fresh data to keep things in sync
-  setTimeout(() => {
-    refetch();
-  }, 300);
-};
-
-
+    setTimeout(() => {
+      refetch();
+    }, 250);
+  };
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-12 bg-[#fdfaf3] dark:bg-gradient-to-br dark:from-[#0f1c14] dark:to-black text-gray-900 dark:text-white transition-colors duration-500">
@@ -66,11 +79,14 @@ const { words, userWords, updateWordProgress, loading, refetch } = useWords(); /
 
       {loading ? (
         <p className="text-center text-gray-500 dark:text-gray-400">Loading...</p>
-      ) : reviewQueue.length === 0 ? (
-        <p className="text-center text-amber-600 dark:text-amber-400">
-          🎉 Nothing to review! Come back later.
-        </p>
-      ) : current ? (
+      ) : !current ? (
+        <div className="text-center text-amber-600 dark:text-amber-400">
+          🎉 You’re all caught up for now!
+          <div className="text-xs text-pink-500 mt-1">
+            ⚠️ Debug: No current words matched — check <code>next_review</code> logic or word/user sync.
+          </div>
+        </div>
+      ) : (
         <div className="max-w-lg mx-auto text-center bg-white/80 dark:bg-white/5 p-8 rounded-xl shadow-md border dark:border-gray-700">
           <h2 className="text-4xl font-[Scheherazade] mb-2">{current.arabic}</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
@@ -98,7 +114,7 @@ const { words, userWords, updateWordProgress, loading, refetch } = useWords(); /
             ))}
           </div>
         </div>
-      ) : null}
+      )}
 
       <div className="mt-10 text-center text-sm text-orange-600 dark:text-orange-400">
         <Flame className="inline w-4 h-4" /> Streak: <strong>{streak}</strong>
@@ -108,3 +124,5 @@ const { words, userWords, updateWordProgress, loading, refetch } = useWords(); /
 };
 
 export default Review;
+
+
