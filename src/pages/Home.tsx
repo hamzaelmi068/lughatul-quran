@@ -156,6 +156,10 @@ const Home = () => {
           {/* Enhanced CTA Button - Bold and prominent */}
           <motion.div
             className="mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
             <motion.button
               onClick={() => navigate(user ? '/learn' : '/auth')}
               className="group relative px-8 py-4 sm:px-10 sm:py-5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-lg sm:text-xl shadow-2xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 focus:ring-offset-4 focus:ring-offset-gray-900"
